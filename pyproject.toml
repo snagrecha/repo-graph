@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "repo-graph"
+version = "0.1.0"
+description = "Transform your codebase into a structured semantic knowledge graph for AI agents and developers."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+    { name = "Sneh Nagrecha", email = "sneh.nagrecha@gmail.com" },
+]
+dependencies = [
+    "click>=8.1.7",
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+    "rustworkx>=0.13.2",
+    "pydriller>=2.6",
+    "tree-sitter>=0.20.4",
+    "watchdog>=3.0.0",
+    "msgpack>=1.0.7",
+    "pydantic>=2.5.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "black>=24.1.1",
+    "ruff>=0.2.1",
+    "httpx>=0.26.0",
+]
+
+[project.scripts]
+repo-graph = "repo_graph.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["repo_graph"]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+select = ["E", "F", "I", "N", "W"]
