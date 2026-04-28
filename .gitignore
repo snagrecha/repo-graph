@@ -57,6 +57,7 @@ pnpm-lock.yaml
 # Development
 .env.local
 *.log
+DEV_GUIDE.md
 
 # Claude
 CLAUDE.md
