@@ -93,9 +93,14 @@ def create_app(store: GraphStore, repo_root: str) -> FastAPI:
     app.include_router(ws_router)
 
     # Serve built React UI if available; otherwise return a placeholder
-    ui_dist = Path(__file__).parent.parent.parent / "ui" / "dist"
-    if ui_dist.is_dir():
-        app.mount("/", StaticFiles(directory=str(ui_dist), html=True), name="ui")
+    # In development, it lives at the repo root. In a PyPI wheel, it's bundled inside repo_graph.
+    local_ui = Path(__file__).parent.parent.parent / "ui" / "dist"
+    bundled_ui = Path(__file__).parent.parent / "ui"
+
+    if local_ui.is_dir():
+        app.mount("/", StaticFiles(directory=str(local_ui), html=True), name="ui")
+    elif bundled_ui.is_dir():
+        app.mount("/", StaticFiles(directory=str(bundled_ui), html=True), name="ui")
     else:
 
         @app.get("/", include_in_schema=False)

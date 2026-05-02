@@ -57,6 +57,9 @@ repo-graph = "repo_graph.cli:main"
 [tool.hatch.build.targets.wheel]
 packages = ["repo_graph"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"ui/dist" = "repo_graph/ui"
+
 [tool.black]
 line-length = 88
 target-version = ["py311"]
