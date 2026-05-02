@@ -12,6 +12,20 @@ license = "MIT"
 authors = [
     { name = "Sneh Nagrecha", email = "sneh.nagrecha@gmail.com" },
 ]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Quality Assurance"
+]
+
+[project.urls]
+Homepage = "https://github.com/snagrecha/repo-graph"
+Repository = "https://github.com/snagrecha/repo-graph.git"
+Issues = "https://github.com/snagrecha/repo-graph/issues"
 dependencies = [
     "click>=8.1.7",
     "fastapi>=0.109.0",

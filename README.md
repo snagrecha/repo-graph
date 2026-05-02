@@ -137,20 +137,18 @@ repo-graph start .
 
 ## Roadmap
 
-### Phase 1 (Alpha) — Core MCP Engine
+### Phase 1 (Alpha) — Core MCP Engine & UI
 - ✅ AST parsing (Python, TypeScript, Rust)
 - ✅ Parallel ingestion pipeline
 - ✅ SQLite persistence
-- ✅ Basic 2D graph UI
+- ✅ 3D WebGL Graph UI with Blast Radius & Overlays
 - ✅ MCP server (`stdio` transport)
-- 🔄 **Current**
 
 ### Phase 2 (Beta) — Temporal Intelligence
+- 🔄 **Current**
 - 🔲 Git overlay with diff-patch snapshots
 - 🔲 Context pruning engine
-- 🔲 3D WebGL rendering
 - 🔲 Time-travel slider
-- 🔲 Analytical overlays (Complexity, Churn, Ownership)
 
 ### Phase 3 (v1.0) — Ecosystem
 - 🔲 Plugin system launch

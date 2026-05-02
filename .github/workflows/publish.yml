@@ -1,0 +1,33 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Node (for Vite build)
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+    - name: Build frontend
+      run: |
+        cd ui
+        npm ci
+        npm run build
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    - name: Install hatch
+      run: pip install hatch
+    - name: Build python wheel
+      run: hatch build
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
