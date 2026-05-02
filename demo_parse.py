@@ -10,8 +10,8 @@ import os
 import sys
 from collections import Counter
 
-from repo_graph.graph.schema import EdgeType, NodeType
-from repo_graph.ingestion.parser import parse_file
+from repo_lens.graph.schema import EdgeType, NodeType
+from repo_lens.ingestion.parser import parse_file
 
 repo_root = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(__file__)
 
@@ -43,7 +43,7 @@ node_counts = Counter(n.type for n in all_nodes)
 edge_counts = Counter(e.type for e in all_edges)
 
 print(f"\n{'='*50}")
-print(f"  repo-graph parse summary")
+print(f"  repo-lens parse summary")
 print(f"  root: {repo_root}")
 print(f"{'='*50}")
 print(f"\nFiles:  {files_parsed} parsed,  {files_skipped} skipped (unsupported/too large)\n")

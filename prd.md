@@ -38,7 +38,7 @@ To become the standard protocol by which AI agents read and interpret local code
 
 ### 5.2 The Knowledge Graph Database
 * **FR2.1 Graph Storage:** Must store the parsed nodes and edges using `rustworkx` as the in-memory graph structure and `SQLite` as the on-disk persistence layer. This eliminates any external database dependency.
-* **FR2.2 Local Persistence:** The graph must be saved locally via SQLite (stored at `.repo-graph/graph.db` inside the target repository) so the ingestion process does not need to run from scratch on every startup — only diffs should be processed after the initial run. SQLite must be opened in WAL mode to allow concurrent reads from the MCP server and UI API without blocking writes.
+* **FR2.2 Local Persistence:** The graph must be saved locally via SQLite (stored at `.repo-lens/graph.db` inside the target repository) so the ingestion process does not need to run from scratch on every startup — only diffs should be processed after the initial run. SQLite must be opened in WAL mode to allow concurrent reads from the MCP server and UI API without blocking writes.
 
 ### 5.3 The Agent Protocol (MCP Server)
 * **FR3.1 MCP Compliance:** The system must expose tools via the open Model Context Protocol standard.
@@ -68,7 +68,7 @@ To become the standard protocol by which AI agents read and interpret local code
 * **Privacy & Security (Zero-Trust):** 100% of the code ingestion, parsing, and graph storage must happen locally. No proprietary code can be sent to external servers.
 * **Performance:** The visualizer must maintain a stable 60 FPS while rendering up to 10,000 nodes simultaneously using WebGL/Canvas.
 * **Ingestion Parallelism:** The ingestion engine must default to 4 parallel worker processes for AST parsing, bypassing Python's GIL. Worker count must be configurable via `--workers N`. Files exceeding 500KB must be skipped with a logged warning to avoid tree-sitter grammar performance cliffs on large generated or minified files.
-* **Usability (Zero-Config):** Installation must require no database setup or complex environment variables. Two commands should initialize the entire stack: `pip install repo-graph` followed by `repo-graph start .`. A Docker image (`docker run -v $(pwd):/repo repograph/repo-graph`) must also be provided as an alternative for users who prefer not to install Python dependencies globally.
+* **Usability (Zero-Config):** Installation must require no database setup or complex environment variables. Two commands should initialize the entire stack: `pip install repo-lens` followed by `repo-lens start .`. A Docker image (`docker run -v $(pwd):/repo repograph/repo-lens`) must also be provided as an alternative for users who prefer not to install Python dependencies globally.
 
 ---
 

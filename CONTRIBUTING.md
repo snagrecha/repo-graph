@@ -1,6 +1,6 @@
-# Contributing to repo-graph
+# Contributing to repo-lens
 
-Thank you for your interest in contributing to repo-graph! This document outlines how to set up your development environment, contribute code, and extend the project.
+Thank you for your interest in contributing to repo-lens! This document outlines how to set up your development environment, contribute code, and extend the project.
 
 ## Development Setup
 
@@ -12,8 +12,8 @@ Thank you for your interest in contributing to repo-graph! This document outline
 ### Local Installation (Editable Mode)
 
 ```bash
-git clone https://github.com/snagrecha/repo-graph.git
-cd repo-graph
+git clone https://github.com/snagrecha/repo-lens.git
+cd repo-lens
 
 # Install Python dependencies
 pip install -e ".[dev]"
@@ -38,7 +38,7 @@ npm test
 
 ```bash
 # Backend + UI (hot reload)
-repo-graph start .
+repo-lens start .
 ```
 
 The backend runs on `http://localhost:7842`, and the React dev server (Vite) runs on `http://localhost:5173` with proxy to the backend.
@@ -47,10 +47,10 @@ The backend runs on `http://localhost:7842`, and the React dev server (Vite) run
 
 To add parsing support for a new language:
 
-1. **Create a language-specific parser module** in `repo_graph/ingestion/languages/`:
+1. **Create a language-specific parser module** in `repo_lens/ingestion/languages/`:
    ```python
-   # repo_graph/ingestion/languages/go.py
-   from repo_graph.ingestion.languages.base import BaseLanguageParser
+   # repo_lens/ingestion/languages/go.py
+   from repo_lens.ingestion.languages.base import BaseLanguageParser
    
    class GoParser(BaseLanguageParser):
        language = "go"
@@ -61,9 +61,9 @@ To add parsing support for a new language:
            pass
    ```
 
-2. **Register your parser** in `repo_graph/ingestion/parser.py`:
+2. **Register your parser** in `repo_lens/ingestion/parser.py`:
    ```python
-   from repo_graph.ingestion.languages.go import GoParser
+   from repo_lens.ingestion.languages.go import GoParser
    
    LANGUAGE_PARSERS = {
        "go": GoParser(),
@@ -73,7 +73,7 @@ To add parsing support for a new language:
 
 3. **Test on a small repository:**
    ```bash
-   repo-graph start /path/to/test/go/repo
+   repo-lens start /path/to/test/go/repo
    ```
 
 4. **Add unit tests** in `tests/ingestion/languages/test_go.py`.
@@ -86,8 +86,8 @@ Plugins allow you to inject custom metadata or node types into the graph.
 
 ```python
 # plugins/my_plugin.py
-from repo_graph.graph.schema import Node, Edge
-from repo_graph.plugins.base import RepoGraphPlugin
+from repo_lens.graph.schema import Node, Edge
+from repo_lens.plugins.base import RepoGraphPlugin
 
 class MyPlugin(RepoGraphPlugin):
     name = "my-plugin"
@@ -110,7 +110,7 @@ class MyPlugin(RepoGraphPlugin):
 
 Place your plugin in a `plugins/` directory at the repo root:
 ```bash
-repo-graph start . --plugins-dir ./plugins
+repo-lens start . --plugins-dir ./plugins
 ```
 
 **Security Note:** Plugins run with your OS permissions in Phase 1–3. WASM sandboxing is a Phase 4 goal. Only load plugins you trust.
@@ -119,16 +119,16 @@ repo-graph start . --plugins-dir ./plugins
 
 To add a new MCP tool:
 
-1. **Implement the tool function** in the appropriate `repo_graph/mcp/tools/*.py` module:
+1. **Implement the tool function** in the appropriate `repo_lens/mcp/tools/*.py` module:
    ```python
-   # repo_graph/mcp/tools/structural.py
+   # repo_lens/mcp/tools/structural.py
    def my_new_tool(node_id: str, param: str) -> dict:
        """Tool description for the MCP server."""
        # Implementation
        return {"result": "..."}
    ```
 
-2. **Register it in the MCP server** in `repo_graph/mcp/server.py`:
+2. **Register it in the MCP server** in `repo_lens/mcp/server.py`:
    ```python
    server.register_tool(
        name="my_new_tool",
@@ -153,8 +153,8 @@ To add a new MCP tool:
 
 - **Python:** Follow PEP 8. Format with `black`, lint with `ruff`.
   ```bash
-  black repo_graph tests
-  ruff check repo_graph tests
+  black repo_lens tests
+  ruff check repo_lens tests
   ```
 
 - **TypeScript/React:** Use Prettier and ESLint.
@@ -194,8 +194,8 @@ Examples:
 
 3. **Format code:**
    ```bash
-   black repo_graph tests
-   ruff check --fix repo_graph tests
+   black repo_lens tests
+   ruff check --fix repo_lens tests
    npm run format
    ```
 
@@ -204,7 +204,7 @@ Examples:
 ## Reporting Issues
 
 - **Bug reports:** Describe steps to reproduce, expected vs. actual behavior, environment details.
-- **Feature requests:** Explain the use case and how it aligns with repo-graph's goals.
+- **Feature requests:** Explain the use case and how it aligns with repo-lens's goals.
 - **Performance issues:** Include repo size, system specs, and timing traces if possible.
 
 ## Architecture & Design Philosophy
@@ -218,7 +218,7 @@ Before making large changes, review:
 - Local-first: No network calls or external services needed.
 - Performance-first: Ingestion time and query latency are hard constraints.
 - AI-first: Design all features with agent usability in mind.
-- Zero-config: Users should only need `pip install` + `repo-graph start .`.
+- Zero-config: Users should only need `pip install` + `repo-lens start .`.
 
 ## Questions?
 

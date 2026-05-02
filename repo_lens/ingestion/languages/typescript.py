@@ -5,7 +5,7 @@ from pathlib import Path
 import tree_sitter_typescript as tsts
 from tree_sitter import Language, Query, QueryCursor, Tree
 
-from repo_graph.graph.schema import Edge, EdgeType, Node, NodeType, make_node_id
+from repo_lens.graph.schema import Edge, EdgeType, Node, NodeType, make_node_id
 
 from .base import BaseLanguageParser
 

@@ -6,7 +6,7 @@ import threading
 
 from starlette.testclient import TestClient
 
-from repo_graph.api.websocket import ConnectionManager, manager
+from repo_lens.api.websocket import ConnectionManager, manager
 
 
 def test_websocket_connects_and_receives_broadcast(test_app):

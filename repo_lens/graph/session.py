@@ -3,7 +3,7 @@ import time
 import uuid
 from typing import Any
 
-from repo_graph.graph.store import GraphStore
+from repo_lens.graph.store import GraphStore
 
 
 class SessionManager:

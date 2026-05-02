@@ -7,8 +7,8 @@ import textwrap
 import tree_sitter_rust as tsrust
 from tree_sitter import Language, Parser
 
-from repo_graph.graph.schema import EdgeType, NodeType, make_node_id
-from repo_graph.ingestion.languages.rust import RustParser
+from repo_lens.graph.schema import EdgeType, NodeType, make_node_id
+from repo_lens.ingestion.languages.rust import RustParser
 
 _RS_PARSER = Parser(Language(tsrust.language()))
 _EXTRACTOR = RustParser()

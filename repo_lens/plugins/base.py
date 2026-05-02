@@ -1,11 +1,11 @@
 from abc import ABC
 
-from repo_graph.graph.schema import Node
-from repo_graph.graph.store import GraphStore
+from repo_lens.graph.schema import Node
+from repo_lens.graph.store import GraphStore
 
 
 class RepoGraphPlugin(ABC):
-    """Base class for all repo-graph plugins."""
+    """Base class for all repo-lens plugins."""
 
     def on_node_created(self, node: Node) -> Node:
         """Called when a node is created or parsed.

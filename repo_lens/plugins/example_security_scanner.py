@@ -1,8 +1,8 @@
 import logging
 
-from repo_graph.graph.schema import Node, NodeType
-from repo_graph.graph.store import GraphStore
-from repo_graph.plugins.base import RepoGraphPlugin
+from repo_lens.graph.schema import Node, NodeType
+from repo_lens.graph.store import GraphStore
+from repo_lens.plugins.base import RepoGraphPlugin
 
 logger = logging.getLogger(__name__)
 

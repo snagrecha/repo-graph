@@ -1,6 +1,6 @@
 import pytest
-from repo_graph.graph.schema import Node, NodeType
-from repo_graph.mcp.tools import structural
+from repo_lens.graph.schema import Node, NodeType
+from repo_lens.mcp.tools import structural
 
 def test_search_nodes_mcp(tmp_store):
     node = Node(

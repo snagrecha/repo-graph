@@ -1,11 +1,11 @@
 import click
-from repo_graph import __version__
+from repo_lens import __version__
 
 
 @click.group()
 @click.version_option(version=__version__)
 def main():
-    """repo-graph: Transform codebases into semantic knowledge graphs."""
+    """repo-lens: Transform codebases into semantic knowledge graphs."""
     pass
 
 
@@ -18,21 +18,21 @@ def start(path, port, workers, full_reindex):
     """Ingest repository and start the FastAPI server (UI + MCP)."""
     import logging
     from pathlib import Path
-    from repo_graph.ingestion.engine import IngestionEngine
+    from repo_lens.ingestion.engine import IngestionEngine
 
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s [%(name)s:%(levelname)s] %(message)s"
     )
 
-    click.echo(f"Starting repo-graph for: {path}")
+    click.echo(f"Starting repo-lens for: {path}")
     
-    db_path = Path(path) / ".repo-graph" / "graph.db"
+    db_path = Path(path) / ".repo-lens" / "graph.db"
     engine = IngestionEngine(repo_root=path, db_path=db_path)
     engine.run(workers=workers, full_reindex=full_reindex)
 
     import uvicorn
-    from repo_graph.api.app import create_app
-    from repo_graph.graph.store import GraphStore
+    from repo_lens.api.app import create_app
+    from repo_lens.graph.store import GraphStore
 
     store = GraphStore(db_path)
     try:
@@ -52,15 +52,15 @@ def mcp(path, workers):
     import asyncio
     import logging
     from pathlib import Path
-    from repo_graph.ingestion.engine import IngestionEngine
-    from repo_graph.graph.store import GraphStore
-    from repo_graph.mcp.server import run_stdio_server
+    from repo_lens.ingestion.engine import IngestionEngine
+    from repo_lens.graph.store import GraphStore
+    from repo_lens.mcp.server import run_stdio_server
 
     logging.basicConfig(
         level=logging.WARNING, format="%(asctime)s [%(name)s:%(levelname)s] %(message)s"
     )
 
-    db_path = Path(path) / ".repo-graph" / "graph.db"
+    db_path = Path(path) / ".repo-lens" / "graph.db"
     
     # 1. Ensure graph is ingested
     engine = IngestionEngine(repo_root=path, db_path=db_path)
@@ -82,15 +82,15 @@ def sync(path):
     """Re-run git overlay on an existing graph."""
     import logging
     from pathlib import Path
-    from repo_graph.graph.store import GraphStore
-    from repo_graph.ingestion.git_overlay import apply_git_overlay
+    from repo_lens.graph.store import GraphStore
+    from repo_lens.ingestion.git_overlay import apply_git_overlay
 
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s [%(name)s:%(levelname)s] %(message)s"
     )
 
     click.echo(f"Syncing git history for: {path}")
-    db_path = Path(path) / ".repo-graph" / "graph.db"
+    db_path = Path(path) / ".repo-lens" / "graph.db"
 
     with GraphStore(db_path) as store:
         apply_git_overlay(path, store)

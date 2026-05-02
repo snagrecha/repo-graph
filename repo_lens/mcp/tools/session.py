@@ -1,6 +1,6 @@
 from typing import Any
 
-from repo_graph.graph.session import SessionManager
+from repo_lens.graph.session import SessionManager
 
 
 def get_agent_session_history(

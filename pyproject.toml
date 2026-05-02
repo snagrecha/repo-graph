@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "repo-graph"
+name = "repo-lens"
 version = "0.1.0"
 description = "Transform your codebase into a structured semantic knowledge graph for AI agents and developers."
 readme = "README.md"
@@ -22,10 +22,7 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance"
 ]
 
-[project.urls]
-Homepage = "https://github.com/snagrecha/repo-graph"
-Repository = "https://github.com/snagrecha/repo-graph.git"
-Issues = "https://github.com/snagrecha/repo-graph/issues"
+
 dependencies = [
     "click>=8.1.7",
     "fastapi>=0.109.0",
@@ -42,6 +39,11 @@ dependencies = [
     "mcp>=1.1.2",
 ]
 
+[project.urls]
+Homepage = "https://github.com/snagrecha/repo-lens"
+Repository = "https://github.com/snagrecha/repo-lens.git"
+Issues = "https://github.com/snagrecha/repo-lens/issues"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
@@ -52,13 +54,13 @@ dev = [
 ]
 
 [project.scripts]
-repo-graph = "repo_graph.cli:main"
+repo-lens = "repo_lens.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["repo_graph"]
+packages = ["repo_lens"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"ui/dist" = "repo_graph/ui"
+"ui/dist" = "repo_lens/ui"
 
 [tool.black]
 line-length = 88

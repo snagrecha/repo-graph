@@ -4,8 +4,8 @@ import asyncio
 
 from fastapi import APIRouter, Depends
 
-from repo_graph.api.dependencies import get_store
-from repo_graph.graph.store import GraphStore
+from repo_lens.api.dependencies import get_store
+from repo_lens.graph.store import GraphStore
 
 router = APIRouter(prefix="/api/overlays", tags=["overlays"])
 

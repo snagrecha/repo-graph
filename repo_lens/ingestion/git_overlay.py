@@ -5,7 +5,7 @@ from pathlib import Path
 
 from pydriller import Repository
 
-from repo_graph.graph.store import GraphStore
+from repo_lens.graph.store import GraphStore
 
 logger = logging.getLogger(__name__)
 

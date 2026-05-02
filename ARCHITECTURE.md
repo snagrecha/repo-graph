@@ -1,13 +1,13 @@
-# repo-graph Architecture
+# repo-lens Architecture
 
 ## 1. System Overview
 
-repo-graph is structured as three loosely coupled subsystems that share a single local SQLite store:
+repo-lens is structured as three loosely coupled subsystems that share a single local SQLite store:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        CLI Entry Point                       │
-│                    `repo-graph start .`                      │
+│                    `repo-lens start .`                      │
 └───────────────┬─────────────────────┬───────────────────────┘
                 │                     │
                 ▼                     ▼
@@ -36,16 +36,16 @@ repo-graph is structured as three loosely coupled subsystems that share a single
                             └─────────────────────────┘
 ```
 
-All three subsystems are started by a single `repo-graph start .` command. The ingestion engine runs once at startup (and on file-watch events), then exits. The FastAPI process stays alive serving both the MCP server and the UI API.
+All three subsystems are started by a single `repo-lens start .` command. The ingestion engine runs once at startup (and on file-watch events), then exits. The FastAPI process stays alive serving both the MCP server and the UI API.
 
 ---
 
 ## 2. Repository Layout
 
 ```
-repo-graph/
-├── repo_graph/                  # Python package (backend)
-│   ├── __main__.py              # CLI entry: `python -m repo_graph`
+repo-lens/
+├── repo_lens/                  # Python package (backend)
+│   ├── __main__.py              # CLI entry: `python -m repo_lens`
 │   ├── cli.py                   # Click/Typer CLI commands
 │   ├── ingestion/
 │   │   ├── engine.py            # Orchestrates the full ingestion pipeline
@@ -173,7 +173,7 @@ class Edge:
 
 ## 4. SQLite Schema
 
-Single file at `.repo-graph/graph.db` inside the target repository. WAL mode is enabled on first open (`PRAGMA journal_mode=WAL`) to allow concurrent reads from the MCP server and UI API without blocking ingestion writes.
+Single file at `.repo-lens/graph.db` inside the target repository. WAL mode is enabled on first open (`PRAGMA journal_mode=WAL`) to allow concurrent reads from the MCP server and UI API without blocking ingestion writes.
 
 ```sql
 -- Core graph (rebuilt on full re-index, patched on incremental)
@@ -238,9 +238,9 @@ CREATE TABLE agent_actions (
 ### Startup sequence
 
 ```
-repo-graph start .
+repo-lens start .
     │
-    ├─ 1. Check .repo-graph/graph.db exists?
+    ├─ 1. Check .repo-lens/graph.db exists?
     │       YES → load existing graph into rustworkx, proceed to step 5
     │       NO  → full ingestion (steps 2–4)
     │
@@ -269,16 +269,16 @@ repo-graph start .
 
 Only the changed file is re-parsed. Its old nodes and edges are removed from the graph (matched by `file_path`); new ones are inserted. The git overlay is not re-run on file-watch events.
 
-### `repo-graph sync` command
+### `repo-lens sync` command
 
-Running `repo-graph sync .` explicitly re-runs the git overlay on an already-ingested graph (picks up new commits since last run) and regenerates diff-patch snapshots for new commits only. This is the only way to update temporal data between restarts without doing a full re-index.
+Running `repo-lens sync .` explicitly re-runs the git overlay on an already-ingested graph (picks up new commits since last run) and regenerates diff-patch snapshots for new commits only. This is the only way to update temporal data between restarts without doing a full re-index.
 
 ---
 
 ## 6. MCP Server
 
 **Transport by phase:**
-- **Phase 1 (Alpha):** `stdio` transport only. The MCP server runs as a subprocess that Claude Code (or any MCP-compatible agent) spawns directly. No FastAPI dependency for the MCP path. Config snippet for Claude Code: `{"mcpServers": {"repo-graph": {"command": "repo-graph", "args": ["mcp", "."]}}}`.
+- **Phase 1 (Alpha):** `stdio` transport only. The MCP server runs as a subprocess that Claude Code (or any MCP-compatible agent) spawns directly. No FastAPI dependency for the MCP path. Config snippet for Claude Code: `{"mcpServers": {"repo-lens": {"command": "repo-lens", "args": ["mcp", "."]}}}`.
 - **Phase 2+ (Beta/v1.0):** Add `HTTP/SSE` transport, mounted on the FastAPI app at `/mcp`. Required for IDE extensions and CI/CD use cases where a subprocess model doesn't apply.
 
 Both transports use the same underlying tool implementations — only the transport adapter differs.
@@ -380,7 +380,7 @@ class RepoGraphPlugin:
 
 ### Security note
 
-Plugins run with the same OS permissions as repo-graph. They are **not sandboxed** in Phase 1–3. WASM sandboxing is a Phase 4 goal. Document this clearly in the plugin developer guide.
+Plugins run with the same OS permissions as repo-lens. They are **not sandboxed** in Phase 1–3. WASM sandboxing is a Phase 4 goal. Document this clearly in the plugin developer guide.
 
 ---
 
@@ -390,21 +390,21 @@ Plugins run with the same OS permissions as repo-graph. They are **not sandboxed
 
 **Goal:** Prove the MCP server works and reduces token usage on real tasks.
 
-- [ ] `repo_graph/ingestion/parser.py` — tree-sitter parsing for Python + TypeScript + Rust
-- [ ] `repo_graph/ingestion/engine.py` — parallel worker pool (multiprocessing)
-- [ ] `repo_graph/graph/store.py` — rustworkx in-memory graph + SQLite persistence
-- [ ] `repo_graph/mcp/tools/structural.py` — 5 core MCP tools
-- [ ] `repo_graph/graph/session.py` — agent session persistence
-- [ ] `repo_graph/mcp/tools/session.py` — session MCP tools
-- [ ] `repo_graph/cli.py` — three commands:
-  - `repo-graph start .` — ingest + start FastAPI (MCP via HTTP/SSE + UI). Full stack. For human use.
-  - `repo-graph mcp .` — ingest + start MCP server via `stdio` only. No UI, no FastAPI. For agent use (Claude Code, etc.).
-  - `repo-graph sync .` — re-run git overlay on existing graph, pick up new commits only.
+- [ ] `repo_lens/ingestion/parser.py` — tree-sitter parsing for Python + TypeScript + Rust
+- [ ] `repo_lens/ingestion/engine.py` — parallel worker pool (multiprocessing)
+- [ ] `repo_lens/graph/store.py` — rustworkx in-memory graph + SQLite persistence
+- [ ] `repo_lens/mcp/tools/structural.py` — 5 core MCP tools
+- [ ] `repo_lens/graph/session.py` — agent session persistence
+- [ ] `repo_lens/mcp/tools/session.py` — session MCP tools
+- [ ] `repo_lens/cli.py` — three commands:
+  - `repo-lens start .` — ingest + start FastAPI (MCP via HTTP/SSE + UI). Full stack. For human use.
+  - `repo-lens mcp .` — ingest + start MCP server via `stdio` only. No UI, no FastAPI. For agent use (Claude Code, etc.).
+  - `repo-lens sync .` — re-run git overlay on existing graph, pick up new commits only.
 - [ ] File watcher (watchdog) for incremental updates
 - [ ] Basic 2D graph UI (react-force-graph-2d, no time-travel yet)
 - [ ] Docker image
-- [ ] `pyproject.toml` — package name `repo-graph`, entry point `repo-graph = "repo_graph.cli:main"`, Python ≥3.11, Vite build hook, core deps: `tree-sitter`, `rustworkx`, `pydriller`, `fastapi`, `uvicorn`, `watchdog`, `msgpack`, `click`
-- [ ] Add `.repo-graph/` to the project's `.gitignore` template (graph DB must not be committed)
+- [ ] `pyproject.toml` — package name `repo-lens`, entry point `repo-lens = "repo_lens.cli:main"`, Python ≥3.11, Vite build hook, core deps: `tree-sitter`, `rustworkx`, `pydriller`, `fastapi`, `uvicorn`, `watchdog`, `msgpack`, `click`
+- [ ] Add `.repo-lens/` to the project's `.gitignore` template (graph DB must not be committed)
 - [ ] `CONTRIBUTING.md` — language parser guide, plugin guide, dev setup instructions
 - [ ] **Benchmark:** measure token consumption on 5 representative multi-file queries vs full-file injection. Publish results in README.
 
@@ -412,10 +412,10 @@ Plugins run with the same OS permissions as repo-graph. They are **not sandboxed
 
 **Goal:** Add the git temporal layer and context pruning — the two core differentiators.
 
-- [ ] `repo_graph/ingestion/git_overlay.py` — PyDriller commit → node property mapping
-- [ ] `repo_graph/ingestion/diff_snapshot.py` — per-commit graph diff-patches
-- [ ] `repo_graph/mcp/tools/temporal.py` — `get_node_history`, `get_graph_at_commit`
-- [ ] `repo_graph/mcp/tools/context.py` — context pruning engine
+- [ ] `repo_lens/ingestion/git_overlay.py` — PyDriller commit → node property mapping
+- [ ] `repo_lens/ingestion/diff_snapshot.py` — per-commit graph diff-patches
+- [ ] `repo_lens/mcp/tools/temporal.py` — `get_node_history`, `get_graph_at_commit`
+- [ ] `repo_lens/mcp/tools/context.py` — context pruning engine
 - [ ] `ui/src/components/TimeSlider.tsx` — time-travel slider
 - [ ] 3D canvas upgrade (react-force-graph-3d)
 - [ ] Analytical overlays (Complexity, Churn, Ownership heatmaps)
@@ -425,11 +425,11 @@ Plugins run with the same OS permissions as repo-graph. They are **not sandboxed
 
 **Goal:** Plugin ecosystem, IDE extensions, CI/CD integration.
 
-- [ ] **Opt-in anonymous telemetry** — on first run, prompt user once: "Send anonymous usage stats to help prioritise development? [y/N]". Answer stored in `~/.config/repo-graph/config.toml`. If opted in, send a single POST on startup to a self-hosted endpoint containing: repo size bucket (not content), language list, OS, ingestion time, MCP tool call counts (not args). No code, no paths, no symbols ever leave the machine. Implementation: `repo_graph/telemetry.py`, fire-and-forget with 2s timeout.
-- [ ] `repo_graph/plugins/` — plugin loader + base class
-- [ ] VS Code extension (separate repo: `repo-graph-vscode`)
+- [ ] **Opt-in anonymous telemetry** — on first run, prompt user once: "Send anonymous usage stats to help prioritise development? [y/N]". Answer stored in `~/.config/repo-lens/config.toml`. If opted in, send a single POST on startup to a self-hosted endpoint containing: repo size bucket (not content), language list, OS, ingestion time, MCP tool call counts (not args). No code, no paths, no symbols ever leave the machine. Implementation: `repo_lens/telemetry.py`, fire-and-forget with 2s timeout.
+- [ ] `repo_lens/plugins/` — plugin loader + base class
+- [ ] VS Code extension (separate repo: `repo-lens-vscode`)
 - [ ] Cursor `contextProvider` adapter
-- [ ] GitHub Actions workflow: `repo-graph blast-radius --base main --head HEAD --fail-on-depth 5`
+- [ ] GitHub Actions workflow: `repo-lens blast-radius --base main --head HEAD --fail-on-depth 5`
 - [ ] `FR5.2` UI widget API
 
 ### Phase 4 — Beyond v1.0

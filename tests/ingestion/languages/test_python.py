@@ -7,8 +7,8 @@ import textwrap
 import tree_sitter_python as tspython
 from tree_sitter import Language, Parser
 
-from repo_graph.graph.schema import EdgeType, NodeType, make_node_id
-from repo_graph.ingestion.languages.python import PythonParser
+from repo_lens.graph.schema import EdgeType, NodeType, make_node_id
+from repo_lens.ingestion.languages.python import PythonParser
 
 _PARSER = Parser(Language(tspython.language()))
 _EXTRACTOR = PythonParser()

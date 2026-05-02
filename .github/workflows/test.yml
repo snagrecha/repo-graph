@@ -22,10 +22,10 @@ jobs:
         pip install -e ".[dev]"
     - name: Lint with ruff
       run: |
-        ruff check repo_graph tests
+        ruff check repo_lens tests
     - name: Check formatting with black
       run: |
-        black --check repo_graph tests
+        black --check repo_lens tests
     - name: Test with pytest
       run: |
         pytest tests/ -v
