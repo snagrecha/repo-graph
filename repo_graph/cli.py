@@ -1,5 +1,4 @@
 import click
-import sys
 from repo_graph import __version__
 
 
@@ -31,10 +30,18 @@ def start(path, port, workers, full_reindex):
     engine = IngestionEngine(repo_root=path, db_path=db_path)
     engine.run(workers=workers, full_reindex=full_reindex)
 
-    click.echo(f"FastAPI server will listen on port: {port}")
-    # TODO: Implement FastAPI startup
-    click.echo("Error: FastAPI not implemented yet (Phase 1 API).", err=True)
-    sys.exit(1)
+    import uvicorn
+    from repo_graph.api.app import create_app
+    from repo_graph.graph.store import GraphStore
+
+    store = GraphStore(db_path)
+    try:
+        app = create_app(store, str(Path(path).resolve()))
+        click.echo(f"Listening on http://localhost:{port}")
+        click.echo(f"MCP SSE endpoint: http://localhost:{port}/mcp/sse")
+        uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
+    finally:
+        store.close()
 
 
 @main.command()
