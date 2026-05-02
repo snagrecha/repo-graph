@@ -25,6 +25,7 @@ dependencies = [
     "watchdog>=3.0.0",
     "msgpack>=1.0.7",
     "pydantic>=2.5.3",
+    "mcp>=1.1.2",
 ]
 
 [project.optional-dependencies]

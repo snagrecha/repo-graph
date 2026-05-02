@@ -34,6 +34,24 @@ CREATE INDEX IF NOT EXISTS idx_nodes_type      ON nodes(type);
 CREATE INDEX IF NOT EXISTS idx_nodes_name      ON nodes(name);
 CREATE INDEX IF NOT EXISTS idx_edges_source    ON edges(source_id);
 CREATE INDEX IF NOT EXISTS idx_edges_target    ON edges(target_id);
+
+CREATE TABLE IF NOT EXISTS agent_sessions (
+    session_id   TEXT NOT NULL,
+    repo_root    TEXT NOT NULL,
+    created_at   INTEGER NOT NULL,
+    last_active  INTEGER NOT NULL,
+    PRIMARY KEY (session_id)
+);
+
+CREATE TABLE IF NOT EXISTS agent_actions (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id     TEXT NOT NULL,
+    node_id        TEXT,
+    action         TEXT NOT NULL,
+    timestamp      INTEGER NOT NULL,
+    metadata_json  TEXT,
+    FOREIGN KEY (session_id) REFERENCES agent_sessions(session_id)
+);
 """
 
 
