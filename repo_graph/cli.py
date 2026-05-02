@@ -39,12 +39,34 @@ def start(path, port, workers, full_reindex):
 
 @main.command()
 @click.argument("path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
-def mcp(path):
-    """Start the MCP server via stdio transport (no UI)."""
-    click.echo(f"Starting MCP server for: {path}")
-    # TODO: Implement MCP stdio transport
-    click.echo("Error: Not implemented yet (Phase 1).", err=True)
-    sys.exit(1)
+@click.option("--workers", default=4, help="Number of parallel parsing workers")
+def mcp(path, workers):
+    """Ingest repository and start the MCP server via stdio transport."""
+    import asyncio
+    import logging
+    from pathlib import Path
+    from repo_graph.ingestion.engine import IngestionEngine
+    from repo_graph.graph.store import GraphStore
+    from repo_graph.mcp.server import run_stdio_server
+
+    logging.basicConfig(
+        level=logging.WARNING, format="%(asctime)s [%(name)s:%(levelname)s] %(message)s"
+    )
+
+    db_path = Path(path) / ".repo-graph" / "graph.db"
+    
+    # 1. Ensure graph is ingested
+    engine = IngestionEngine(repo_root=path, db_path=db_path)
+    engine.run(workers=workers)
+
+    # 2. Start MCP server
+    # We use a context manager to ensure DB is closed on exit if needed,
+    # but the server runs until stdin is closed.
+    store = GraphStore(db_path)
+    try:
+        asyncio.run(run_stdio_server(store, path))
+    finally:
+        store.close()
 
 
 @main.command()
