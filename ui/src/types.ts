@@ -2,6 +2,13 @@ export type NodeType = 'file' | 'class' | 'function' | 'module' | 'symbol';
 export type EdgeType = 'imports' | 'calls' | 'inherits' | 'contains' | 'co_changes_with';
 export type OverlayMode = 'none' | 'complexity' | 'churn' | 'ownership';
 
+export interface CommitInfo {
+  commit_sha: string;
+  committed_at: number;
+  author: string;
+  message: string;
+}
+
 export interface ApiNode {
   id: string;
   type: NodeType;

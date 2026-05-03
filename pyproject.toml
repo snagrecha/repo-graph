@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "code-nexus"
-version = "0.1.1"
+dynamic = ["version"]
 description = "Transform your codebase into a structured semantic knowledge graph for AI agents and developers."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -76,3 +76,6 @@ addopts = "--import-mode=importlib"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
+
+[tool.hatch.version]
+path = "codenexus/__init__.py"

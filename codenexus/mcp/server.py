@@ -6,8 +6,9 @@ from mcp.types import TextContent, Tool
 
 from codenexus.graph.session import SessionManager
 from codenexus.graph.store import GraphStore
+from codenexus.mcp.tools import context as context_tools
 from codenexus.mcp.tools import session as session_tools
-from codenexus.mcp.tools import structural
+from codenexus.mcp.tools import structural, temporal
 
 
 def create_mcp_server(store: GraphStore, repo_root: str) -> Server:
@@ -197,6 +198,69 @@ def create_mcp_server(store: GraphStore, repo_root: str) -> Server:
                     "properties": {},
                 },
             ),
+            Tool(
+                name="get_node_history",
+                description=(
+                    "Retrieve the git commit history for a specific node. "
+                    "Returns commits that modified the file containing the node, "
+                    "including author, timestamp, and message."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "node_id": {"type": "string"},
+                        "limit": {"type": "integer", "default": 10},
+                    },
+                    "required": ["node_id"],
+                },
+            ),
+            Tool(
+                name="get_graph_at_commit",
+                description=(
+                    "Return the full graph state as it existed after a specific commit SHA. "
+                    "Useful for time-travel queries or understanding historical architecture."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "commit_sha": {"type": "string"},
+                    },
+                    "required": ["commit_sha"],
+                },
+            ),
+            Tool(
+                name="get_narrowed_context",
+                description=(
+                    "Request a minimised code context focused on a specific node and goal. "
+                    "Returns the most relevant 1-hop neighbours and their source snippets, "
+                    "greedily packed up to a token budget. Fully deterministic — "
+                    "no LLM call inside."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "node_id": {"type": "string"},
+                        "goal": {"type": "string"},
+                        "max_tokens": {"type": "integer", "default": 8000},
+                    },
+                    "required": ["node_id", "goal"],
+                },
+            ),
+            Tool(
+                name="get_blast_radius_report",
+                description=(
+                    "Return an enriched blast radius for a node with risk scores per "
+                    "affected node. Risk is based on git churn, dependency fan-out, "
+                    "and proximity to the target."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "node_id": {"type": "string"},
+                    },
+                    "required": ["node_id"],
+                },
+            ),
         ]
 
     @server.call_tool()
@@ -255,6 +319,30 @@ def create_mcp_server(store: GraphStore, repo_root: str) -> Server:
             elif name == "create_session":
                 session_id = session_manager.create_session(repo_root)
                 result = {"session_id": session_id}
+            elif name == "get_node_history":
+                result = temporal.get_node_history_tool(
+                    store,
+                    node_id=arguments["node_id"],
+                    limit=arguments.get("limit", 10),
+                )
+            elif name == "get_graph_at_commit":
+                result = temporal.get_graph_at_commit_tool(
+                    store,
+                    commit_sha=arguments["commit_sha"],
+                )
+            elif name == "get_narrowed_context":
+                result = context_tools.get_narrowed_context(
+                    store,
+                    repo_root=repo_root,
+                    node_id=arguments["node_id"],
+                    goal=arguments["goal"],
+                    max_tokens=arguments.get("max_tokens", 8000),
+                )
+            elif name == "get_blast_radius_report":
+                result = structural.get_blast_radius_report(
+                    store,
+                    node_id=arguments["node_id"],
+                )
             else:
                 raise ValueError(f"Unknown tool: {name}")
 

@@ -15,9 +15,10 @@
 - Identifies imports, function calls, and inheritance relationships
 
 🔍 **AI Agent-First Design**
-- MCP-compliant query tools: `search_nodes`, `get_node_signature`, `get_downstream_dependencies`, `get_upstream_callers`
+- MCP-compliant query tools: `search_nodes`, `get_node_signature`, `get_downstream_dependencies`, `get_upstream_callers`, `get_blast_radius_report`
 - Context pruning engine: automatically filters non-essential code to minimize token usage
 - Agent session persistence: track inspection history across restarts
+- Temporal MCP tools: `get_node_history`, `get_graph_at_commit`
 
 ⏱️ **Git-Integrated Temporal Context**
 - Commit history overlay: tracks churn, ownership, and last-modified metadata per node
@@ -145,10 +146,11 @@ code-nexus start .
 - ✅ MCP server (`stdio` transport)
 
 ### Phase 2 (Beta) — Temporal Intelligence
-- 🔄 **Current**
-- 🔲 Git overlay with diff-patch snapshots
-- 🔲 Context pruning engine
-- 🔲 Time-travel slider
+- ✅ Git overlay with diff-patch snapshots
+- ✅ Context pruning engine
+- ✅ Time-travel slider
+- ✅ Blast radius risk scoring
+- ✅ `get_node_history` & `get_graph_at_commit` MCP tools
 
 ### Phase 3 (v1.0) — Ecosystem
 - 🔲 Plugin system launch

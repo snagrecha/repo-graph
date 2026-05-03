@@ -1,15 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGraph } from './hooks/useGraph';
 import { useWebSocket } from './hooks/useWebSocket';
+import { useTimeline } from './hooks/useTimeline';
 import { fetchNodeDetail, fetchBlastRadius, fetchOverlay } from './api';
 import { GraphCanvas } from './components/GraphCanvas';
 import { Sidebar } from './components/Sidebar';
 import { NodeDetailPanel } from './components/NodeDetailPanel';
+import { TimeSlider } from './components/TimeSlider';
 import type {
   NodeDetailResponse,
   BlastRadiusResponse,
   OverlayMode,
   GraphNode,
+  GraphLink,
 } from './types';
 
 export default function App() {
@@ -26,6 +29,27 @@ export default function App() {
   const overlayCache = useRef<Map<OverlayMode, Record<string, unknown>>>(new Map());
 
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Timeline: historical graph overrides HEAD graph when a commit is selected
+  const [timelineNodes, setTimelineNodes] = useState<GraphNode[] | null>(null);
+  const [timelineLinks, setTimelineLinks] = useState<GraphLink[] | null>(null);
+
+  const displayNodes = timelineNodes ?? nodes;
+  const displayLinks = timelineLinks ?? links;
+
+  const setGraphData = useCallback((newNodes: GraphNode[], newLinks: GraphLink[]) => {
+    setTimelineNodes(newNodes);
+    setTimelineLinks(newLinks);
+  }, []);
+
+  const timeline = useTimeline(reload, setGraphData);
+
+  // Save the HEAD graph data for reset
+  useEffect(() => {
+    if (nodes.length > 0 || links.length > 0) {
+      timeline.saveOriginalData(nodes, links);
+    }
+  }, [nodes, links, timeline.saveOriginalData]);
 
   // Reconnect and reload graph on any websocket message
   const handleWsMessage = useCallback(() => {
@@ -112,32 +136,38 @@ export default function App() {
   return (
     <div className="app">
       <Sidebar
-        nodeCount={nodes.length}
-        edgeCount={links.length}
+        nodeCount={displayNodes.length}
+        edgeCount={displayLinks.length}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         overlayMode={overlayMode}
         onOverlayChange={setOverlayMode}
         blastRadiusActive={blastRadius !== null}
         onClearBlastRadius={handleClearBlastRadius}
-        loading={loading}
+        loading={loading || timeline.loading}
       />
       <main className="graph-area">
-        {error && (
+        {error && !timeline.selectedCommit && (
           <div className="graph-empty">
             <p style={{ color: 'var(--text-secondary)' }}>Failed to load graph: {error}</p>
           </div>
         )}
         <GraphCanvas
-          nodes={nodes}
-          links={links}
+          nodes={displayNodes}
+          links={displayLinks}
           selectedNodeId={selectedNodeId}
           blastRadiusSet={blastRadiusSet}
           overlayMode={overlayMode}
           overlayData={overlayData}
           searchQuery={searchQuery}
-          loading={loading}
+          loading={loading || timeline.loading}
           onNodeClick={handleNodeClick}
+        />
+        <TimeSlider
+          commits={timeline.commits}
+          selectedCommit={timeline.selectedCommit}
+          onSelectCommit={timeline.selectCommit}
+          loading={timeline.loading}
         />
       </main>
       {selectedNodeId && (

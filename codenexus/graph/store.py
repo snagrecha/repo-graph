@@ -35,6 +35,25 @@ CREATE INDEX IF NOT EXISTS idx_nodes_name      ON nodes(name);
 CREATE INDEX IF NOT EXISTS idx_edges_source    ON edges(source_id);
 CREATE INDEX IF NOT EXISTS idx_edges_target    ON edges(target_id);
 
+CREATE TABLE IF NOT EXISTS commit_snapshots (
+    commit_sha   TEXT PRIMARY KEY,
+    committed_at INTEGER NOT NULL,
+    author       TEXT NOT NULL,
+    message      TEXT NOT NULL,
+    diff_patch   BLOB NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_commit_snapshots_committed_at ON commit_snapshots(committed_at);
+
+CREATE TABLE IF NOT EXISTS node_commits (
+    node_id      TEXT NOT NULL,
+    commit_sha   TEXT NOT NULL,
+    PRIMARY KEY (node_id, commit_sha)
+);
+
+CREATE INDEX IF NOT EXISTS idx_node_commits_node_id ON node_commits(node_id);
+CREATE INDEX IF NOT EXISTS idx_node_commits_commit_sha ON node_commits(commit_sha);
+
 CREATE TABLE IF NOT EXISTS agent_sessions (
     session_id   TEXT NOT NULL,
     repo_root    TEXT NOT NULL,
@@ -73,7 +92,7 @@ class GraphStore:
         # (source_id, target_id, edge_type_value) → rustworkx edge index
         self._edge_key_to_idx: dict[tuple[str, str, str], int] = {}
 
-        self._db = sqlite3.connect(str(self._db_path))
+        self._db = sqlite3.connect(str(self._db_path), check_same_thread=False)
         self._db.row_factory = sqlite3.Row
         self._db.execute("PRAGMA journal_mode=WAL")
         self._db.executescript(_SCHEMA_SQL)

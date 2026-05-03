@@ -7,7 +7,7 @@ from codenexus.graph.queries import (
 from codenexus.graph.queries import (
     get_upstream_callers as _query_upstream_callers,
 )
-from codenexus.graph.schema import NodeType
+from codenexus.graph.schema import Node, NodeType
 from codenexus.graph.store import GraphStore
 
 
@@ -95,6 +95,63 @@ def get_upstream_callers(store: GraphStore, node_id: str, depth: int = 3) -> lis
     """Return nodes that call or import the given node (i.e. its callers/consumers)."""
     nodes = _query_upstream_callers(store, node_id, max_depth=depth)
     return [_node_to_dict(n, include_lines=True) for n in nodes]
+
+
+def get_blast_radius_report(store: GraphStore, node_id: str) -> dict[str, Any]:
+    """Return an enriched blast radius with a risk score per affected node.
+
+    Risk heuristic: high git churn + many transitive dependencies + proximity
+    to the target node all increase risk.
+    """
+    upstream = _query_upstream_callers(store, node_id, max_depth=3)
+    downstream = get_downstream_deps(store, node_id, max_depth=3)
+
+    all_affected: dict[str, Node] = {n.id: n for n in upstream + downstream}
+
+    # Pre-compute 1-hop counts for scoring
+    up_1 = {n.id for n in _query_upstream_callers(store, node_id, max_depth=1)}
+    down_1 = {n.id for n in get_downstream_deps(store, node_id, max_depth=1)}
+
+    report: list[dict[str, Any]] = []
+    for nid, node in all_affected.items():
+        churn = node.metadata.get("git_churn", 0)
+        up_count = len(
+            [e for e in store.get_incoming_edges(nid) if e.type.value in ("calls", "imports")]
+        )
+        down_count = len(
+            [e for e in store.get_outgoing_edges(nid) if e.type.value in ("calls", "imports")]
+        )
+
+        if nid in down_1:
+            depth = 1
+        elif nid in up_1:
+            depth = 1
+        else:
+            depth = 2  # coarse; could be 2 or 3
+
+        # Simple heuristic: proximity + churn + fan-out
+        risk = (churn * 0.1) + ((up_count + down_count) * 0.5) + (4 - depth) * 2
+
+        report.append(
+            {
+                "node_id": nid,
+                "qualified_name": _node_to_dict(node)["qualified_name"],
+                "type": node.type.value,
+                "depth": depth,
+                "churn": churn,
+                "upstream_count": up_count,
+                "downstream_count": down_count,
+                "risk_score": round(risk, 2),
+            }
+        )
+
+    report.sort(key=lambda x: x["risk_score"], reverse=True)
+
+    return {
+        "target_node_id": node_id,
+        "affected_node_count": len(report),
+        "affected_nodes": report,
+    }
 
 
 def _node_to_dict(node: Any, include_lines: bool = False) -> dict[str, Any]:

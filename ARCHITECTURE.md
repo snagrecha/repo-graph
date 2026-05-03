@@ -119,7 +119,9 @@ class NodeType(str, Enum):
     CLASS      = "class"
     FUNCTION   = "function"
     MODULE     = "module"       # top-level module/package
-    SYMBOL     = "symbol"       # module-level exported constant/variable
+    SYMBOL     = "symbol"       # module-level exported constant/enum/PascalCase const
+    INTERFACE  = "interface"    # TypeScript interface declaration
+    TYPE_ALIAS = "type_alias"   # TypeScript type alias declaration
 ```
 
 ### Node Properties
@@ -135,16 +137,18 @@ class Node:
     type: NodeType
     name: str
     file_path: str              # relative to repo root
-    start_line: int
-    end_line: int
-    language: str
-    # populated by git_overlay
-    last_modified_commit: str
-    last_modified_author: str
-    churn_score: int            # number of commits touching this node
-    primary_owner: str          # author with most commits
-    # populated by complexity pass
-    cyclomatic_complexity: int | None
+    start_line: int | None = None
+    end_line: int | None = None
+    language: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    # Well-known metadata keys populated by language parsers:
+    #   "accessed_fields": {field_name: [line_numbers]}
+    #       → set on FUNCTION nodes; tracks every property/attribute accessed
+    #         inside the function body, with exact line numbers. Used by the
+    #         search_field_usages MCP tool.
+    # Phase 2 git_overlay keys (not yet populated):
+    #   "last_modified_commit", "last_modified_author",
+    #   "churn_score", "primary_owner", "cyclomatic_complexity"
 ```
 
 ### Edge Types
@@ -152,7 +156,7 @@ class Node:
 ```python
 class EdgeType(str, Enum):
     IMPORTS          = "imports"          # file → file
-    CALLS            = "calls"            # function → function
+    CALLS            = "calls"            # function → function / JSX component → component
     INHERITS         = "inherits"         # class → class
     CONTAINS         = "contains"         # file/class → function/class
     CO_CHANGES_WITH  = "co_changes_with"  # file ↔ file (git co-change analysis) — Phase 2 only
@@ -166,7 +170,7 @@ class Edge:
     source_id: str
     target_id: str
     type: EdgeType
-    weight: float               # for CO_CHANGES_WITH: co-change frequency (0–1)
+    metadata: dict[str, Any] = field(default_factory=dict)
 ```
 
 ---
@@ -178,58 +182,61 @@ Single file at `.codenexus/graph.db` inside the target repository. WAL mode is e
 ```sql
 -- Core graph (rebuilt on full re-index, patched on incremental)
 CREATE TABLE nodes (
-    id TEXT PRIMARY KEY,
-    type TEXT NOT NULL,
-    name TEXT NOT NULL,
-    file_path TEXT NOT NULL,
-    start_line INTEGER,
-    end_line INTEGER,
-    language TEXT,
-    last_modified_commit TEXT,
-    last_modified_author TEXT,
-    churn_score INTEGER DEFAULT 0,
-    primary_owner TEXT,
-    cyclomatic_complexity INTEGER,
-    extra_json TEXT            -- plugin-injected metadata
+    id          TEXT PRIMARY KEY,
+    type        TEXT NOT NULL,
+    name        TEXT NOT NULL,
+    file_path   TEXT NOT NULL,
+    start_line  INTEGER,
+    end_line    INTEGER,
+    language    TEXT,
+    metadata    TEXT NOT NULL DEFAULT '{}'   -- JSON; includes "accessed_fields" when populated
 );
 
 CREATE TABLE edges (
-    source_id TEXT NOT NULL,
-    target_id TEXT NOT NULL,
-    type TEXT NOT NULL,
-    weight REAL DEFAULT 1.0,
+    source_id   TEXT NOT NULL,
+    target_id   TEXT NOT NULL,
+    type        TEXT NOT NULL,
+    metadata    TEXT NOT NULL DEFAULT '{}',
     PRIMARY KEY (source_id, target_id, type)
 );
 
--- Git temporal overlay (written once during initial ingestion)
-CREATE TABLE commit_snapshots (
-    commit_sha TEXT NOT NULL,
-    committed_at INTEGER NOT NULL,   -- unix timestamp
-    author TEXT NOT NULL,
-    message TEXT NOT NULL,
-    diff_patch BLOB NOT NULL,        -- msgpack-serialised graph diff
-    PRIMARY KEY (commit_sha)
-);
+CREATE INDEX IF NOT EXISTS idx_nodes_file_path ON nodes(file_path);
+CREATE INDEX IF NOT EXISTS idx_nodes_type      ON nodes(type);
+CREATE INDEX IF NOT EXISTS idx_nodes_name      ON nodes(name);
+CREATE INDEX IF NOT EXISTS idx_edges_source    ON edges(source_id);
+CREATE INDEX IF NOT EXISTS idx_edges_target    ON edges(target_id);
 
 -- Agent session state
 CREATE TABLE agent_sessions (
-    session_id TEXT NOT NULL,
-    repo_root TEXT NOT NULL,
-    created_at INTEGER NOT NULL,
-    last_active INTEGER NOT NULL,
+    session_id   TEXT NOT NULL,
+    repo_root    TEXT NOT NULL,
+    created_at   INTEGER NOT NULL,
+    last_active  INTEGER NOT NULL,
     PRIMARY KEY (session_id)
 );
 
 CREATE TABLE agent_actions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_id TEXT NOT NULL,
-    node_id TEXT,
-    action TEXT NOT NULL,            -- "inspected" | "modified" | "queried"
-    timestamp INTEGER NOT NULL,
-    metadata_json TEXT,
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id     TEXT NOT NULL,
+    node_id        TEXT,
+    action         TEXT NOT NULL,            -- "inspected" | "modified" | "queried"
+    timestamp      INTEGER NOT NULL,
+    metadata_json  TEXT,
     FOREIGN KEY (session_id) REFERENCES agent_sessions(session_id)
 );
+
+-- Phase 2 (not yet implemented)
+-- CREATE TABLE commit_snapshots (
+--     commit_sha   TEXT NOT NULL,
+--     committed_at INTEGER NOT NULL,
+--     author       TEXT NOT NULL,
+--     message      TEXT NOT NULL,
+--     diff_patch   BLOB NOT NULL,    -- msgpack-serialised graph diff
+--     PRIMARY KEY (commit_sha)
+-- );
 ```
+
+> **DB path:** `.code-nexus/graph.db` inside the target repository (note: single hyphen, not dot-separated). Add `.code-nexus/` to the project's `.gitignore`.
 
 ---
 
@@ -288,28 +295,34 @@ Both transports use the same underlying tool implementations — only the transp
 All tools that accept `node_id` require a stable node ID. The intended agent workflow is:
 
 ```
-1. search_nodes(query="PaymentService")  →  returns list of {node_id, name, type, file}
-2. get_node_signature(node_id=<id>)      →  inspect the target node
-3. get_downstream_dependencies(node_id)  →  blast radius
-4. get_narrowed_context(node_id, goal)   →  fetch minimal relevant source
+1. search_nodes(query="PaymentService")       →  returns list with node_id, qualified_name, type, file
+2. get_file_symbols(file_path=<file>)         →  list all symbols in a file before diving in
+3. get_node_signature(node_id=<id>)           →  full source body + metadata for a specific node
+4. get_downstream_dependencies(node_id)       →  what does this node call / import?
+5. get_upstream_callers(node_id)              →  what calls / imports this node?
+6. search_field_usages(field_name="userId")   →  where is a specific property accessed?
 ```
 
-`search_nodes` is the mandatory entry point. All other tools assume the agent already holds a valid `node_id`.
+`search_nodes` is the mandatory entry point. All tools return `qualified_name` (`file_path::symbol` for
+symbols, `file_path` for file nodes) alongside `node_id` so the agent can orient itself without extra lookups.
 
 ### Tool surface (Phase 1 + 2)
 
 | Tool | Args | Returns | Phase |
 |---|---|---|---|
-| `get_node_signature` | `node_id` | name, type, file, line range, language | 1 |
-| `get_downstream_dependencies` | `node_id`, `depth=3` | list of nodes reachable downstream | 1 |
-| `get_upstream_callers` | `node_id`, `depth=3` | list of nodes that call/import this node | 1 |
-| `get_node_history` | `node_id`, `limit=10` | list of commits touching this node | 1 |
-| `search_nodes` | `query`, `type?`, `language?` | fuzzy-matched node list | 1 |
-| `get_agent_session_history` | `session_id` | list of prior actions in this session | 1 |
-| `record_agent_action` | `session_id`, `node_id`, `action` | confirmation | 1 |
+| `search_nodes` | `query`, `node_type?`, `language?`, `file_path?` | nodes with `qualified_name`, type, file, line range | 1 ✅ |
+| `get_file_symbols` | `file_path` | all non-file symbols in a file, sorted by `start_line` | 1 ✅ |
+| `get_node_signature` | `node_id`, `snippet_lines=10` | full source body (uses `end_line`), metadata | 1 ✅ |
+| `get_downstream_dependencies` | `node_id`, `depth=3` | nodes this node calls or imports (outgoing) | 1 ✅ |
+| `get_upstream_callers` | `node_id`, `depth=3` | nodes that call or import this node (incoming) | 1 ✅ |
+| `search_field_usages` | `field_name`, `language?` | functions accessing a property, with line numbers | 1 ✅ |
+| `get_agent_session_history` | `session_id` | list of prior actions in this session | 1 ✅ |
+| `record_agent_action` | `session_id`, `node_id`, `action`, `metadata?` | confirmation | 1 ✅ |
+| `create_session` | — | new `session_id` | 1 ✅ |
 | `get_narrowed_context` | `node_id`, `goal` | minimised code snippet for task goal | 2 |
 | `get_graph_at_commit` | `commit_sha` | full graph state at that commit | 2 |
 | `get_blast_radius_report` | `node_id` | affected nodes + risk score | 2 |
+| `get_node_history` | `node_id`, `limit=10` | commits touching this node (requires git overlay) | 2 |
 
 ### Context Pruning Engine (`get_narrowed_context`)
 
@@ -390,36 +403,41 @@ Plugins run with the same OS permissions as code-nexus. They are **not sandboxed
 
 **Goal:** Prove the MCP server works and reduces token usage on real tasks.
 
-- [ ] `codenexus/ingestion/parser.py` — tree-sitter parsing for Python + TypeScript + Rust
-- [ ] `codenexus/ingestion/engine.py` — parallel worker pool (multiprocessing)
-- [ ] `codenexus/graph/store.py` — rustworkx in-memory graph + SQLite persistence
-- [ ] `codenexus/mcp/tools/structural.py` — 5 core MCP tools
-- [ ] `codenexus/graph/session.py` — agent session persistence
-- [ ] `codenexus/mcp/tools/session.py` — session MCP tools
-- [ ] `codenexus/cli.py` — three commands:
+- [x] `codenexus/ingestion/parser.py` — tree-sitter parsing for Python + TypeScript/TSX + Rust
+- [x] `codenexus/ingestion/engine.py` — parallel worker pool (multiprocessing)
+- [x] `codenexus/graph/store.py` — rustworkx in-memory graph + SQLite persistence
+- [x] `codenexus/mcp/tools/structural.py` — 9 MCP tools (see tool surface table)
+- [x] `codenexus/graph/session.py` — agent session persistence
+- [x] `codenexus/mcp/tools/session.py` — session MCP tools
+- [x] `codenexus/cli.py` — three commands:
   - `code-nexus start .` — ingest + start FastAPI (MCP via HTTP/SSE + UI). Full stack. For human use.
   - `code-nexus mcp .` — ingest + start MCP server via `stdio` only. No UI, no FastAPI. For agent use (Claude Code, etc.).
   - `code-nexus sync .` — re-run git overlay on existing graph, pick up new commits only.
-- [ ] File watcher (watchdog) for incremental updates
-- [ ] Basic 2D graph UI (react-force-graph-2d, no time-travel yet)
+  - Both `start` and `mcp` accept `--full-reindex` to force a clean re-parse (required after parser upgrades).
+- [x] TypeScript/TSX: interface, type alias, enum, PascalCase const node extraction
+- [x] JSX CALLS edges (TSX files): `<ComponentName />` → `calls` edge to the referenced component
+- [x] `accessed_fields` metadata on FUNCTION nodes (Python + TypeScript): property/attribute accesses tracked with line numbers; enables `search_field_usages`
+- [x] `qualified_name` (`file_path::symbol`) returned by all MCP tools
+- [x] File watcher (watchdog) for incremental updates
+- [x] 3D graph UI (react-force-graph-3d)
 - [ ] Docker image
-- [ ] `pyproject.toml` — package name `code-nexus`, entry point `code-nexus = "code-nexus.cli:main"`, Python ≥3.11, Vite build hook, core deps: `tree-sitter`, `rustworkx`, `pydriller`, `fastapi`, `uvicorn`, `watchdog`, `msgpack`, `click`
-- [ ] Add `.codenexus/` to the project's `.gitignore` template (graph DB must not be committed)
-- [ ] `CONTRIBUTING.md` — language parser guide, plugin guide, dev setup instructions
+- [x] `pyproject.toml` — package name `code-nexus`, entry point `code-nexus = "code-nexus.cli:main"`, Python ≥3.11, core deps: `tree-sitter`, `rustworkx`, `pydriller`, `fastapi`, `uvicorn`, `watchdog`, `msgpack`, `click`
+- [x] Add `.code-nexus/` to the project's `.gitignore` template (graph DB must not be committed)
+- [x] `CONTRIBUTING.md` — language parser guide, plugin guide, dev setup instructions
 - [ ] **Benchmark:** measure token consumption on 5 representative multi-file queries vs full-file injection. Publish results in README.
 
 ### Phase 2 — Beta
 
 **Goal:** Add the git temporal layer and context pruning — the two core differentiators.
 
-- [ ] `codenexus/ingestion/git_overlay.py` — PyDriller commit → node property mapping
-- [ ] `codenexus/ingestion/diff_snapshot.py` — per-commit graph diff-patches
-- [ ] `codenexus/mcp/tools/temporal.py` — `get_node_history`, `get_graph_at_commit`
-- [ ] `codenexus/mcp/tools/context.py` — context pruning engine
-- [ ] `ui/src/components/TimeSlider.tsx` — time-travel slider
-- [ ] 3D canvas upgrade (react-force-graph-3d)
-- [ ] Analytical overlays (Complexity, Churn, Ownership heatmaps)
-- [ ] `get_blast_radius_report` MCP tool
+- [x] `codenexus/ingestion/git_overlay.py` — PyDriller commit → node property mapping
+- [x] `codenexus/ingestion/diff_snapshot.py` — per-commit graph diff-patches
+- [x] `codenexus/mcp/tools/temporal.py` — `get_node_history`, `get_graph_at_commit`
+- [x] `codenexus/mcp/tools/context.py` — context pruning engine
+- [x] `ui/src/components/TimeSlider.tsx` — time-travel slider
+- [x] 3D canvas (react-force-graph-3d)
+- [x] Analytical overlays API (Complexity, Churn, Ownership heatmaps)
+- [x] `get_blast_radius_report` MCP tool
 
 ### Phase 3 — v1.0
 

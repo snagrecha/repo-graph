@@ -93,9 +93,10 @@ class IngestionEngine:
         workers: int = 4,
         full_reindex: bool = False,
         git_granularity: str = "file",
+        skip_snapshots: bool = False,
     ) -> None:
         """Run the full ingestion pipeline."""
-        logger.info(f"Starting ingestion for {self.repo_root}")
+        logger.info("Starting ingestion for %s", self.repo_root)
         start_time = time.time()
 
         files_to_parse = []
@@ -177,8 +178,13 @@ class IngestionEngine:
 
             # Apply Git history if requested
             if full_reindex:
-                apply_git_overlay(str(self.repo_root), store, granularity=git_granularity)
+                apply_git_overlay(
+                    str(self.repo_root),
+                    store,
+                    granularity=git_granularity,
+                    skip_snapshots=skip_snapshots,
+                )
 
             self.plugins.trigger_on_graph_ready(store)
 
-        logger.info(f"Ingestion complete in {time.time() - start_time:.2f}s.")
+        logger.info("Ingestion complete in %.2fs.", time.time() - start_time)

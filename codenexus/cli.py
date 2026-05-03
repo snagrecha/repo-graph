@@ -23,7 +23,12 @@ def main():
         "field tracking, or edge extraction."
     ),
 )
-def start(path, port, workers, full_reindex):
+@click.option(
+    "--skip-snapshots",
+    is_flag=True,
+    help="Skip generating per-commit diff snapshots (faster, disables time-travel).",
+)
+def start(path, port, workers, full_reindex, skip_snapshots):
     """Ingest repository and start the FastAPI server (UI + MCP)."""
     import logging
     from pathlib import Path
@@ -38,7 +43,7 @@ def start(path, port, workers, full_reindex):
 
     db_path = Path(path) / ".code-nexus" / "graph.db"
     engine = IngestionEngine(repo_root=path, db_path=db_path)
-    engine.run(workers=workers, full_reindex=full_reindex)
+    engine.run(workers=workers, full_reindex=full_reindex, skip_snapshots=skip_snapshots)
 
     import uvicorn
 
@@ -66,7 +71,12 @@ def start(path, port, workers, full_reindex):
         "new node types, field tracking, or edge extraction."
     ),
 )
-def mcp(path, workers, full_reindex):
+@click.option(
+    "--skip-snapshots",
+    is_flag=True,
+    help="Skip generating per-commit diff snapshots (faster, disables time-travel).",
+)
+def mcp(path, workers, full_reindex, skip_snapshots):
     """Ingest repository and start the MCP server via stdio transport."""
     import asyncio
     import logging
@@ -84,7 +94,7 @@ def mcp(path, workers, full_reindex):
 
     # 1. Ensure graph is ingested
     engine = IngestionEngine(repo_root=path, db_path=db_path)
-    engine.run(workers=workers, full_reindex=full_reindex)
+    engine.run(workers=workers, full_reindex=full_reindex, skip_snapshots=skip_snapshots)
 
     # 2. Start MCP server
     # We use a context manager to ensure DB is closed on exit if needed,
@@ -98,7 +108,12 @@ def mcp(path, workers, full_reindex):
 
 @main.command()
 @click.argument("path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
-def sync(path):
+@click.option(
+    "--skip-snapshots",
+    is_flag=True,
+    help="Skip generating per-commit diff snapshots.",
+)
+def sync(path, skip_snapshots):
     """Re-run git overlay on an existing graph."""
     import logging
     from pathlib import Path
@@ -114,7 +129,7 @@ def sync(path):
     db_path = Path(path) / ".code-nexus" / "graph.db"
 
     with GraphStore(db_path) as store:
-        apply_git_overlay(path, store)
+        apply_git_overlay(path, store, skip_snapshots=skip_snapshots)
 
     click.echo("Sync complete.")
 

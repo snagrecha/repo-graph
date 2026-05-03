@@ -153,8 +153,8 @@ To add a new MCP tool:
 
 - **Python:** Follow PEP 8. Format with `black`, lint with `ruff`.
   ```bash
-  black code-nexus tests
-  ruff check code-nexus tests
+  black codenexus tests
+  ruff check codenexus tests
   ```
 
 - **TypeScript/React:** Use Prettier and ESLint.
