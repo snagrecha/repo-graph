@@ -16,6 +16,11 @@ _CALL_QUERY = Query(
     "(call function: [(identifier) @fn (attribute attribute: (identifier) @fn)])",
 )
 
+_ATTR_QUERY = Query(
+    _LANGUAGE,
+    "(attribute attribute: (identifier) @attr)",
+)
+
 
 def _resolve_relative_import(file_path: str, dots: int, module: str, repo_root: str) -> str | None:
     base_dir = Path(file_path).parent
@@ -41,6 +46,13 @@ def _call_names_in(node, language: Language) -> list[str]:
     cursor = QueryCursor(_CALL_QUERY)
     caps = cursor.captures(node)
     return [n.text.decode() for n in caps.get("fn", [])]
+
+
+def _attr_accesses_in(node) -> list[tuple[str, int]]:
+    """Return (attribute_name, 1-based line number) for every attribute access in the subtree."""
+    cursor = QueryCursor(_ATTR_QUERY)
+    caps = cursor.captures(node)
+    return [(n.text.decode(), n.start_point[0] + 1) for n in caps.get("attr", [])]
 
 
 def _unwrap_decorated(node) -> object | None:
@@ -77,6 +89,7 @@ class PythonParser(BaseLanguageParser):
 
         # First pass — collect definitions so call resolution works.
         func_ids: dict[str, str] = {}  # symbol name → node_id
+        func_nodes: dict[str, Node] = {}  # symbol name → Node, for metadata updates
 
         for child in root.children:
             inner = _unwrap_decorated(child) or child
@@ -88,17 +101,17 @@ class PythonParser(BaseLanguageParser):
                 name = name_node.text.decode()
                 node_id = make_node_id(repo_root, file_path, name)
                 func_ids[name] = node_id
-                nodes.append(
-                    Node(
-                        id=node_id,
-                        type=NodeType.FUNCTION,
-                        name=name,
-                        file_path=file_path,
-                        start_line=inner.start_point[0] + 1,
-                        end_line=inner.end_point[0] + 1,
-                        language="python",
-                    )
+                fn_node = Node(
+                    id=node_id,
+                    type=NodeType.FUNCTION,
+                    name=name,
+                    file_path=file_path,
+                    start_line=inner.start_point[0] + 1,
+                    end_line=inner.end_point[0] + 1,
+                    language="python",
                 )
+                func_nodes[name] = fn_node
+                nodes.append(fn_node)
                 edges.append(Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS))
 
             elif inner.type == "class_definition":
@@ -198,12 +211,15 @@ class PythonParser(BaseLanguageParser):
                 name_node = inner.child_by_field_name("name")
                 if name_node is None:
                     continue
-                caller_id = func_ids.get(name_node.text.decode())
+                caller_name = name_node.text.decode()
+                caller_id = func_ids.get(caller_name)
                 if caller_id is None:
                     continue
                 body = inner.child_by_field_name("body")
                 if body is None:
                     continue
+
+                # Intra-file function call edges
                 for callee_name in _call_names_in(body, _LANGUAGE):
                     callee_id = func_ids.get(callee_name)
                     if callee_id and callee_id != caller_id:
@@ -214,5 +230,16 @@ class PythonParser(BaseLanguageParser):
                                 type=EdgeType.CALLS,
                             )
                         )
+
+                # Attribute-access field tracking — store in node metadata for search_field_usages
+                fn_node = func_nodes.get(caller_name)
+                if fn_node is not None:
+                    field_map: dict[str, list[int]] = {}
+                    for attr_name, line_num in _attr_accesses_in(body):
+                        field_map.setdefault(attr_name, [])
+                        if line_num not in field_map[attr_name]:
+                            field_map[attr_name].append(line_num)
+                    if field_map:
+                        fn_node.metadata["accessed_fields"] = field_map
 
         return nodes, edges

@@ -7,6 +7,8 @@ def test_node_type_values():
     assert NodeType.FUNCTION.value == "function"
     assert NodeType.MODULE.value == "module"
     assert NodeType.SYMBOL.value == "symbol"
+    assert NodeType.INTERFACE.value == "interface"
+    assert NodeType.TYPE_ALIAS.value == "type_alias"
 
 
 def test_edge_type_values():

@@ -12,6 +12,8 @@ class NodeType(str, Enum):
     FUNCTION = "function"
     MODULE = "module"
     SYMBOL = "symbol"
+    INTERFACE = "interface"
+    TYPE_ALIAS = "type_alias"
 
 
 class EdgeType(str, Enum):
