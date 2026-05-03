@@ -319,10 +319,10 @@ symbols, `file_path` for file nodes) alongside `node_id` so the agent can orient
 | `get_agent_session_history` | `session_id` | list of prior actions in this session | 1 ✅ |
 | `record_agent_action` | `session_id`, `node_id`, `action`, `metadata?` | confirmation | 1 ✅ |
 | `create_session` | — | new `session_id` | 1 ✅ |
-| `get_narrowed_context` | `node_id`, `goal` | minimised code snippet for task goal | 2 |
-| `get_graph_at_commit` | `commit_sha` | full graph state at that commit | 2 |
-| `get_blast_radius_report` | `node_id` | affected nodes + risk score | 2 |
-| `get_node_history` | `node_id`, `limit=10` | commits touching this node (requires git overlay) | 2 |
+| `get_narrowed_context` | `node_id`, `goal`, `max_tokens=8000` | minimised code snippet for task goal | 2 ✅ |
+| `get_graph_at_commit` | `commit_sha` | full graph state at that commit | 2 ✅ |
+| `get_blast_radius_report` | `node_id` | affected nodes + risk score | 2 ✅ |
+| `get_node_history` | `node_id`, `limit=10` | commits touching this node (requires git overlay) | 2 ✅ |
 
 ### Context Pruning Engine (`get_narrowed_context`)
 
