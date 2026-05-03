@@ -7,7 +7,7 @@ from typing import Any
 
 import rustworkx
 
-from repo_lens.graph.schema import Edge, EdgeType, Node, NodeType
+from codenexus.graph.schema import Edge, EdgeType, Node, NodeType
 
 _SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS nodes (

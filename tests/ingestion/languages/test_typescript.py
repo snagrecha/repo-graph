@@ -7,8 +7,8 @@ import textwrap
 import tree_sitter_typescript as tsts
 from tree_sitter import Language, Parser
 
-from repo_lens.graph.schema import EdgeType, NodeType, make_node_id
-from repo_lens.ingestion.languages.typescript import TypeScriptParser
+from codenexus.graph.schema import EdgeType, NodeType, make_node_id
+from codenexus.ingestion.languages.typescript import TypeScriptParser
 
 _TS_PARSER = Parser(Language(tsts.language_typescript()))
 _EXTRACTOR = TypeScriptParser(tsx=False)

@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from repo_lens.graph.schema import Edge, Node
+from codenexus.graph.schema import Edge, Node
 
 
 class NodeResponse(BaseModel):

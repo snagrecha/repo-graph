@@ -6,11 +6,11 @@ import time
 from pathlib import Path
 from typing import Any
 
-from repo_lens.graph.schema import Edge, Node
-from repo_lens.graph.store import GraphStore
-from repo_lens.ingestion.git_overlay import apply_git_overlay
-from repo_lens.ingestion.parser import parse_file
-from repo_lens.plugins.loader import PluginManager
+from codenexus.graph.schema import Edge, Node
+from codenexus.graph.store import GraphStore
+from codenexus.ingestion.git_overlay import apply_git_overlay
+from codenexus.ingestion.parser import parse_file
+from codenexus.plugins.loader import PluginManager
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class IngestionEngine:
     def __init__(self, repo_root: str | Path, db_path: str | Path) -> None:
         self.repo_root = Path(repo_root).resolve()
         self.db_path = Path(db_path).resolve()
-        self.plugins = PluginManager(self.repo_root / ".repo-lens" / "plugins")
+        self.plugins = PluginManager(self.repo_root / ".codenexus" / "plugins")
 
     def _setup_index_table(self, store: GraphStore) -> None:
         store._db.execute(

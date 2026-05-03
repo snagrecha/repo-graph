@@ -1,4 +1,4 @@
-from repo_lens.cli import main
+from codenexus.cli import main
 
 if __name__ == "__main__":
     main()

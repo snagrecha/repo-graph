@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from repo_lens.graph.schema import NodeType
-from repo_lens.ingestion.parser import _MAX_FILE_BYTES, LANGUAGE_PARSERS, parse_file
+from codenexus.graph.schema import NodeType
+from codenexus.ingestion.parser import _MAX_FILE_BYTES, LANGUAGE_PARSERS, parse_file
 
 
 @pytest.fixture()

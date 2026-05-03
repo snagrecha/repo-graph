@@ -1,6 +1,6 @@
-# Contributing to repo-lens
+# Contributing to code-nexus
 
-Thank you for your interest in contributing to repo-lens! This document outlines how to set up your development environment, contribute code, and extend the project.
+Thank you for your interest in contributing to code-nexus! This document outlines how to set up your development environment, contribute code, and extend the project.
 
 ## Development Setup
 
@@ -12,8 +12,8 @@ Thank you for your interest in contributing to repo-lens! This document outlines
 ### Local Installation (Editable Mode)
 
 ```bash
-git clone https://github.com/snagrecha/repo-lens.git
-cd repo-lens
+git clone https://github.com/snagrecha/code-nexus.git
+cd code-nexus
 
 # Install Python dependencies
 pip install -e ".[dev]"
@@ -38,7 +38,7 @@ npm test
 
 ```bash
 # Backend + UI (hot reload)
-repo-lens start .
+code-nexus start .
 ```
 
 The backend runs on `http://localhost:7842`, and the React dev server (Vite) runs on `http://localhost:5173` with proxy to the backend.
@@ -47,10 +47,10 @@ The backend runs on `http://localhost:7842`, and the React dev server (Vite) run
 
 To add parsing support for a new language:
 
-1. **Create a language-specific parser module** in `repo_lens/ingestion/languages/`:
+1. **Create a language-specific parser module** in `codenexus/ingestion/languages/`:
    ```python
-   # repo_lens/ingestion/languages/go.py
-   from repo_lens.ingestion.languages.base import BaseLanguageParser
+   # codenexus/ingestion/languages/go.py
+   from codenexus.ingestion.languages.base import BaseLanguageParser
    
    class GoParser(BaseLanguageParser):
        language = "go"
@@ -61,9 +61,9 @@ To add parsing support for a new language:
            pass
    ```
 
-2. **Register your parser** in `repo_lens/ingestion/parser.py`:
+2. **Register your parser** in `codenexus/ingestion/parser.py`:
    ```python
-   from repo_lens.ingestion.languages.go import GoParser
+   from codenexus.ingestion.languages.go import GoParser
    
    LANGUAGE_PARSERS = {
        "go": GoParser(),
@@ -73,7 +73,7 @@ To add parsing support for a new language:
 
 3. **Test on a small repository:**
    ```bash
-   repo-lens start /path/to/test/go/repo
+   code-nexus start /path/to/test/go/repo
    ```
 
 4. **Add unit tests** in `tests/ingestion/languages/test_go.py`.
@@ -86,8 +86,8 @@ Plugins allow you to inject custom metadata or node types into the graph.
 
 ```python
 # plugins/my_plugin.py
-from repo_lens.graph.schema import Node, Edge
-from repo_lens.plugins.base import RepoGraphPlugin
+from codenexus.graph.schema import Node, Edge
+from codenexus.plugins.base import RepoGraphPlugin
 
 class MyPlugin(RepoGraphPlugin):
     name = "my-plugin"
@@ -110,7 +110,7 @@ class MyPlugin(RepoGraphPlugin):
 
 Place your plugin in a `plugins/` directory at the repo root:
 ```bash
-repo-lens start . --plugins-dir ./plugins
+code-nexus start . --plugins-dir ./plugins
 ```
 
 **Security Note:** Plugins run with your OS permissions in Phase 1–3. WASM sandboxing is a Phase 4 goal. Only load plugins you trust.
@@ -119,16 +119,16 @@ repo-lens start . --plugins-dir ./plugins
 
 To add a new MCP tool:
 
-1. **Implement the tool function** in the appropriate `repo_lens/mcp/tools/*.py` module:
+1. **Implement the tool function** in the appropriate `codenexus/mcp/tools/*.py` module:
    ```python
-   # repo_lens/mcp/tools/structural.py
+   # codenexus/mcp/tools/structural.py
    def my_new_tool(node_id: str, param: str) -> dict:
        """Tool description for the MCP server."""
        # Implementation
        return {"result": "..."}
    ```
 
-2. **Register it in the MCP server** in `repo_lens/mcp/server.py`:
+2. **Register it in the MCP server** in `codenexus/mcp/server.py`:
    ```python
    server.register_tool(
        name="my_new_tool",
@@ -153,8 +153,8 @@ To add a new MCP tool:
 
 - **Python:** Follow PEP 8. Format with `black`, lint with `ruff`.
   ```bash
-  black repo_lens tests
-  ruff check repo_lens tests
+  black code-nexus tests
+  ruff check code-nexus tests
   ```
 
 - **TypeScript/React:** Use Prettier and ESLint.
@@ -194,8 +194,8 @@ Examples:
 
 3. **Format code:**
    ```bash
-   black repo_lens tests
-   ruff check --fix repo_lens tests
+   black code-nexus tests
+   ruff check --fix code-nexus tests
    npm run format
    ```
 
@@ -204,7 +204,7 @@ Examples:
 ## Reporting Issues
 
 - **Bug reports:** Describe steps to reproduce, expected vs. actual behavior, environment details.
-- **Feature requests:** Explain the use case and how it aligns with repo-lens's goals.
+- **Feature requests:** Explain the use case and how it aligns with code-nexus's goals.
 - **Performance issues:** Include repo size, system specs, and timing traces if possible.
 
 ## Architecture & Design Philosophy
@@ -218,7 +218,7 @@ Before making large changes, review:
 - Local-first: No network calls or external services needed.
 - Performance-first: Ingestion time and query latency are hard constraints.
 - AI-first: Design all features with agent usability in mind.
-- Zero-config: Users should only need `pip install` + `repo-lens start .`.
+- Zero-config: Users should only need `pip install` + `code-nexus start .`.
 
 ## Questions?
 

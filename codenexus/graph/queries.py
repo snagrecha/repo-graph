@@ -3,10 +3,10 @@ from __future__ import annotations
 from collections import deque
 from typing import TYPE_CHECKING
 
-from repo_lens.graph.schema import EdgeType, Node
+from codenexus.graph.schema import EdgeType, Node
 
 if TYPE_CHECKING:
-    from repo_lens.graph.store import GraphStore
+    from codenexus.graph.store import GraphStore
 
 
 def get_downstream_deps(

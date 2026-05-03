@@ -1,7 +1,7 @@
 import pytest
 
-from repo_lens.graph.schema import Edge, EdgeType, Node, NodeType, make_node_id
-from repo_lens.graph.store import GraphStore
+from codenexus.graph.schema import Edge, EdgeType, Node, NodeType, make_node_id
+from codenexus.graph.store import GraphStore
 
 
 def _node(

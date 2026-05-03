@@ -3,7 +3,7 @@ import time
 import uuid
 from typing import Any
 
-from repo_lens.graph.store import GraphStore
+from codenexus.graph.store import GraphStore
 
 
 class SessionManager:

@@ -4,8 +4,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from repo_lens.graph.schema import Node
-from repo_lens.graph.store import GraphStore
+from codenexus.graph.schema import Node
+from codenexus.graph.store import GraphStore
 from .base import RepoGraphPlugin
 
 logger = logging.getLogger(__name__)

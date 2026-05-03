@@ -1,6 +1,6 @@
 import pytest
-from repo_lens.graph.session import SessionManager
-from repo_lens.graph.store import GraphStore
+from codenexus.graph.session import SessionManager
+from codenexus.graph.store import GraphStore
 
 def test_session_creation(tmp_store):
     manager = SessionManager(tmp_store)

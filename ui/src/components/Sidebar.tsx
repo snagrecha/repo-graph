@@ -42,7 +42,7 @@ export function Sidebar({
     <aside className="sidebar">
       {/* Header */}
       <div className="sidebar-header">
-        <h1 className="sidebar-title">repo-lens</h1>
+        <h1 className="sidebar-title">codenexus</h1>
         <div className="sidebar-stats" style={{ opacity: loading ? 0.4 : 1 }}>
           <span className="stat-chip">{nodeCount} nodes</span>
           <span className="stat-sep">·</span>

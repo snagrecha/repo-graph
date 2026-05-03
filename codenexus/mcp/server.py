@@ -5,14 +5,14 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent, ImageContent, EmbeddedResource
 
-from repo_lens.graph.session import SessionManager
-from repo_lens.graph.store import GraphStore
-from repo_lens.mcp.tools import structural, session as session_tools
+from codenexus.graph.session import SessionManager
+from codenexus.graph.store import GraphStore
+from codenexus.mcp.tools import structural, session as session_tools
 
 
 def create_mcp_server(store: GraphStore, repo_root: str) -> Server:
     """Create and configure the MCP server with all tools."""
-    server = Server("repo-lens")
+    server = Server("codenexus")
     session_manager = SessionManager(store)
 
     @server.list_tools()

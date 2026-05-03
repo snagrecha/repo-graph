@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Any
 
-from repo_lens.graph.queries import get_downstream_deps, get_upstream_callers
-from repo_lens.graph.schema import NodeType
-from repo_lens.graph.store import GraphStore
+from codenexus.graph.queries import get_downstream_deps, get_upstream_callers
+from codenexus.graph.schema import NodeType
+from codenexus.graph.store import GraphStore
 
 
 def search_nodes(

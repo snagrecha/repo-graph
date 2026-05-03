@@ -154,7 +154,7 @@ export function GraphCanvas({
         <div className="graph-empty">
           <p>No graph data available.</p>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Run <code>repo-lens start .</code> to index your repository.
+            Run <code>codenexus start .</code> to index your repository.
           </p>
         </div>
       )}

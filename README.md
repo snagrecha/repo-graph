@@ -1,8 +1,8 @@
-# repo-lens
+# code-nexus
 
 > **Transform your codebase into a structured semantic knowledge graph for AI agents and developers.**
 
-`repo-lens` is a local-first, open-source engine that parses your repository into a queryable knowledge graph with rich temporal context from Git history. It provides:
+`code-nexus` is a local-first, open-source engine that parses your repository into a queryable knowledge graph with rich temporal context from Git history. It provides:
 
 - **For AI Agents:** A Model Context Protocol (MCP) server that enables Claude Code and other AI tools to query your codebase structurally instead of via text search—reducing token usage by up to 80% on architectural queries.
 - **For Developers:** An interactive, time-traveling visual map of your code that helps you understand blast radius, code ownership, and architectural dependencies.
@@ -35,21 +35,21 @@
 - Drop plugins into `plugins/` directory—no configuration needed
 
 ⚡ **Zero External Dependencies**
-- Local SQLite storage (graph lives in `.repo-lens/graph.db`)
+- Local SQLite storage (graph lives in `.codenexus/graph.db`)
 - No network calls, no cloud services
-- Single command to start: `repo-lens start .`
+- Single command to start: `code-nexus start .`
 
 ## Quick Start
 
 ### Installation
 
 ```bash
-pip install repo-lens
+pip install code-nexus
 ```
 
 Or use Docker:
 ```bash
-docker run -v $(pwd):/repo repo-lens:latest repo-lens start /repo
+docker run -v $(pwd):/repo code-nexus:latest code-nexus start /repo
 ```
 
 ### Usage
@@ -57,21 +57,21 @@ docker run -v $(pwd):/repo repo-lens:latest repo-lens start /repo
 **For Developers (Interactive UI):**
 ```bash
 cd your-repo
-repo-lens start .
+code-nexus start .
 ```
 Opens `http://localhost:7842` in your browser.
 
 **For AI Agents (MCP Server):**
 ```bash
 cd your-repo
-repo-lens mcp .
+code-nexus mcp .
 ```
 Configure your MCP client (e.g., Claude Code):
 ```json
 {
   "mcpServers": {
-    "repo-lens": {
-      "command": "repo-lens",
+    "code-nexus": {
+      "command": "code-nexus",
       "args": ["mcp", "."]
     }
   }
@@ -80,7 +80,7 @@ Configure your MCP client (e.g., Claude Code):
 
 **Sync with Latest Commits:**
 ```bash
-repo-lens sync .
+code-nexus sync .
 ```
 Re-runs the git overlay on an existing graph to pick up new commits without a full re-index.
 
@@ -101,7 +101,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design, database sche
 
 At a glance:
 ```
-repo-lens start .
+code-nexus start .
     ├─ Ingestion Engine (parallel AST parsing)
     │   └─ Outputs: rustworkx graph + SQLite persistence
     ├─ FastAPI Server
@@ -174,9 +174,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ✅ **100% local processing.** No code, paths, or symbols leave your machine.
 
-✅ **Zero external dependencies.** Graph storage is a single SQLite file inside your repo (`.repo-lens/`).
+✅ **Zero external dependencies.** Graph storage is a single SQLite file inside your repo (`.codenexus/`).
 
-⚠️ **Plugins are not sandboxed in Phase 1–3.** They run with the same OS permissions as repo-lens. WASM sandboxing is a Phase 4 goal. Only load plugins you trust.
+⚠️ **Plugins are not sandboxed in Phase 1–3.** They run with the same OS permissions as code-nexus. WASM sandboxing is a Phase 4 goal. Only load plugins you trust.
 
 ## License
 
@@ -188,8 +188,8 @@ See [LICENSE](LICENSE) for details.
 
 - 📖 [Architecture Guide](ARCHITECTURE.md)
 - 📋 [Product Requirements](prd.md)
-- 💬 [GitHub Issues](https://github.com/your-org/repo-lens/issues)
-- 🐳 Docker: `docker run -v $(pwd):/repo repo-lens:latest`
+- 💬 [GitHub Issues](https://github.com/your-org/codenexus/issues)
+- 🐳 Docker: `docker run -v $(pwd):/repo code-nexus:latest`
 
 ---
 

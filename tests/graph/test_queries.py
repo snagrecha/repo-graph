@@ -1,5 +1,5 @@
-from repo_lens.graph.queries import get_downstream_deps, get_upstream_callers
-from repo_lens.graph.schema import Edge, EdgeType, Node, NodeType, make_node_id
+from codenexus.graph.queries import get_downstream_deps, get_upstream_callers
+from codenexus.graph.schema import Edge, EdgeType, Node, NodeType, make_node_id
 
 
 def _node(name: str, file_path: str = "test.py") -> Node:

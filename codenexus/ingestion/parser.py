@@ -9,7 +9,7 @@ import tree_sitter_rust as tsrust
 import tree_sitter_typescript as tsts
 from tree_sitter import Language, Parser
 
-from repo_lens.graph.schema import Edge, Node
+from codenexus.graph.schema import Edge, Node
 
 from .languages.python import PythonParser
 from .languages.rust import RustParser

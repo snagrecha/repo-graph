@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "repo-lens"
+name = "code-nexus"
 version = "0.1.0"
 description = "Transform your codebase into a structured semantic knowledge graph for AI agents and developers."
 readme = "README.md"
@@ -40,9 +40,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/snagrecha/repo-lens"
-Repository = "https://github.com/snagrecha/repo-lens.git"
-Issues = "https://github.com/snagrecha/repo-lens/issues"
+Homepage = "https://github.com/snagrecha/code-nexus"
+Repository = "https://github.com/snagrecha/code-nexus.git"
+Issues = "https://github.com/snagrecha/code-nexus/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -54,13 +54,13 @@ dev = [
 ]
 
 [project.scripts]
-repo-lens = "repo_lens.cli:main"
+code-nexus = "codenexus.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["repo_lens"]
+packages = ["codenexus"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"ui/dist" = "repo_lens/ui"
+"ui/dist" = "codenexus/ui"
 
 [tool.black]
 line-length = 88

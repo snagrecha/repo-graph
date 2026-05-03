@@ -4,10 +4,10 @@ import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-from repo_lens.api import dependencies
-from repo_lens.api.app import create_app
-from repo_lens.graph.schema import Edge, EdgeType, Node, NodeType, make_node_id
-from repo_lens.graph.store import GraphStore
+from codenexus.api import dependencies
+from codenexus.api.app import create_app
+from codenexus.graph.schema import Edge, EdgeType, Node, NodeType, make_node_id
+from codenexus.graph.store import GraphStore
 
 
 @pytest.fixture()

@@ -13,13 +13,13 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response
 from starlette.types import Receive, Scope, Send
 
-from repo_lens import __version__
-from repo_lens.api.dependencies import init_dependencies
-from repo_lens.api.routes import graph as graph_routes
-from repo_lens.api.routes import overlays as overlay_routes
-from repo_lens.api.websocket import router as ws_router
-from repo_lens.graph.store import GraphStore
-from repo_lens.mcp.server import create_mcp_server
+from codenexus import __version__
+from codenexus.api.dependencies import init_dependencies
+from codenexus.api.routes import graph as graph_routes
+from codenexus.api.routes import overlays as overlay_routes
+from codenexus.api.websocket import router as ws_router
+from codenexus.graph.store import GraphStore
+from codenexus.mcp.server import create_mcp_server
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def create_app(store: GraphStore, repo_root: str) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        from repo_lens.api.watcher import start_watcher
+        from codenexus.api.watcher import start_watcher
 
         loop = asyncio.get_running_loop()
         observer = start_watcher(store, repo_root, loop)
@@ -47,7 +47,7 @@ def create_app(store: GraphStore, repo_root: str) -> FastAPI:
             observer.join()
 
     app = FastAPI(
-        title="repo-lens",
+        title="codenexus",
         version=__version__,
         lifespan=lifespan,
     )
@@ -93,7 +93,7 @@ def create_app(store: GraphStore, repo_root: str) -> FastAPI:
     app.include_router(ws_router)
 
     # Serve built React UI if available; otherwise return a placeholder
-    # In development, it lives at the repo root. In a PyPI wheel, it's bundled inside repo_lens.
+    # In development, it lives at the repo root. In a PyPI wheel, it's bundled inside codenexus.
     local_ui = Path(__file__).parent.parent.parent / "ui" / "dist"
     bundled_ui = Path(__file__).parent.parent / "ui"
 

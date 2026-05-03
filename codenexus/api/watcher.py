@@ -7,9 +7,9 @@ from pathlib import Path
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
-from repo_lens.api.websocket import manager
-from repo_lens.graph.store import GraphStore
-from repo_lens.ingestion.parser import LANGUAGE_PARSERS
+from codenexus.api.websocket import manager
+from codenexus.graph.store import GraphStore
+from codenexus.ingestion.parser import LANGUAGE_PARSERS
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class GraphWatcher(FileSystemEventHandler):
         return Path(path).suffix.lower() in LANGUAGE_PARSERS
 
     def _reparse(self, path: str) -> None:
-        from repo_lens.ingestion.parser import parse_file
+        from codenexus.ingestion.parser import parse_file
 
         self._store.delete_nodes_by_file(path)
         result = parse_file(path, self._repo_root)

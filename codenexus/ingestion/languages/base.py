@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 from tree_sitter import Tree
 
-from repo_lens.graph.schema import Edge, Node
+from codenexus.graph.schema import Edge, Node
 
 
 class BaseLanguageParser(ABC):

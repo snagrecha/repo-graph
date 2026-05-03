@@ -1,6 +1,6 @@
 import pytest
 
-from repo_lens.graph.store import GraphStore
+from codenexus.graph.store import GraphStore
 
 
 @pytest.fixture

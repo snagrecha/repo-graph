@@ -1,8 +1,8 @@
 import logging
 
-from repo_lens.graph.schema import Node, NodeType
-from repo_lens.graph.store import GraphStore
-from repo_lens.plugins.base import RepoGraphPlugin
+from codenexus.graph.schema import Node, NodeType
+from codenexus.graph.store import GraphStore
+from codenexus.plugins.base import RepoGraphPlugin
 
 logger = logging.getLogger(__name__)
 

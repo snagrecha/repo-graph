@@ -4,16 +4,16 @@ import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from repo_lens.api.dependencies import get_repo_root, get_store
-from repo_lens.api.serializers import (
+from codenexus.api.dependencies import get_repo_root, get_store
+from codenexus.api.serializers import (
     BlastRadiusResponse,
     GraphResponse,
     NodeDetailResponse,
     serialize_edge,
     serialize_node,
 )
-from repo_lens.graph.queries import get_downstream_deps, get_upstream_callers
-from repo_lens.graph.store import GraphStore
+from codenexus.graph.queries import get_downstream_deps, get_upstream_callers
+from codenexus.graph.store import GraphStore
 
 router = APIRouter(prefix="/api/graph", tags=["graph"])
 
