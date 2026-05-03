@@ -513,3 +513,136 @@ body,
 .blast-radius-btn:hover {
   background-color: var(--accent-hover);
 }
+
+/* ─── Timeline / Time Slider ─────────────────────────────────────────────── */
+.timeline-container {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  background-color: rgba(15, 23, 42, 0.92);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  z-index: 30;
+  backdrop-filter: blur(4px);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.timeline-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.timeline-reset {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.timeline-reset:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.timeline-loading {
+  font-size: 0.68rem;
+  color: var(--accent);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.timeline-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--bg-elevated);
+  border-radius: 2px;
+  outline: none;
+  margin-bottom: 8px;
+}
+
+.timeline-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg-surface);
+  transition: transform 0.1s;
+}
+
+.timeline-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.timeline-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg-surface);
+}
+
+.timeline-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.timeline-sha {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.72rem;
+  color: var(--accent);
+  background-color: var(--bg-elevated);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.timeline-date {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.timeline-author {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.timeline-message {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeline-empty {
+  padding: 8px 0;
+  text-align: center;
+}

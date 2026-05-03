@@ -23,7 +23,7 @@ def test_store(tmp_path):
         language="python",
         metadata={
             "cyclomatic_complexity": 5,
-            "churn_score": 3,
+            "git_churn": 3,
             "primary_owner": "alice",
         },
     )
@@ -35,7 +35,7 @@ def test_store(tmp_path):
         start_line=10,
         end_line=20,
         language="python",
-        metadata={"cyclomatic_complexity": 2, "churn_score": 1},
+        metadata={"cyclomatic_complexity": 2, "git_churn": 1},
     )
     store.add_node(file_node)
     store.add_node(fn_node)

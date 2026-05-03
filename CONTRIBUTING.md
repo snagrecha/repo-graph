@@ -43,6 +43,11 @@ code-nexus start .
 
 The backend runs on `http://localhost:7842`, and the React dev server (Vite) runs on `http://localhost:5173` with proxy to the backend.
 
+**Tip:** Skip diff-snapshot generation for faster re-indexing during development:
+```bash
+code-nexus start . --full-reindex --skip-snapshots
+```
+
 ## Adding Language Support
 
 To add parsing support for a new language:
@@ -117,35 +122,29 @@ code-nexus start . --plugins-dir ./plugins
 
 ## Adding MCP Tools
 
+Tool modules live in `codenexus/mcp/tools/`:
+
+| Module | Purpose |
+|---|---|
+| `structural.py` | Graph traversal: `search_nodes`, `get_node_signature`, `get_downstream_dependencies`, `get_upstream_callers`, `search_field_usages`, `get_file_symbols` |
+| `temporal.py` | Git history: `get_node_history`, `get_graph_at_commit` |
+| `context.py` | Context pruning: `get_narrowed_context` |
+| `session.py` | Agent session tracking: `create_session`, `record_agent_action`, `get_agent_session_history` |
+
 To add a new MCP tool:
 
-1. **Implement the tool function** in the appropriate `codenexus/mcp/tools/*.py` module:
+1. **Implement the tool function** in the appropriate module:
    ```python
    # codenexus/mcp/tools/structural.py
-   def my_new_tool(node_id: str, param: str) -> dict:
+   def my_new_tool(store: GraphStore, node_id: str, param: str) -> dict:
        """Tool description for the MCP server."""
        # Implementation
        return {"result": "..."}
    ```
 
-2. **Register it in the MCP server** in `codenexus/mcp/server.py`:
-   ```python
-   server.register_tool(
-       name="my_new_tool",
-       description="What this tool does",
-       input_schema={
-           "type": "object",
-           "properties": {
-               "node_id": {"type": "string"},
-               "param": {"type": "string"}
-           },
-           "required": ["node_id"]
-       },
-       handler=my_new_tool
-   )
-   ```
+2. **Register it in `codenexus/mcp/server.py`** by adding a `Tool(...)` entry inside the `@server.list_tools()` handler and a dispatch branch inside `@server.call_tool()`.
 
-3. **Add tests** in `tests/mcp/test_tools.py`.
+3. **Add tests** in `tests/mcp/test_<module>_tools.py` (e.g. `tests/mcp/test_structural_tools.py`).
 
 4. **Update ARCHITECTURE.md** to document the new tool in the "Tool surface" table.
 
@@ -153,8 +152,8 @@ To add a new MCP tool:
 
 - **Python:** Follow PEP 8. Format with `black`, lint with `ruff`.
   ```bash
-  black code-nexus tests
-  ruff check code-nexus tests
+  black codenexus tests
+  ruff check codenexus tests
   ```
 
 - **TypeScript/React:** Use Prettier and ESLint.
@@ -194,8 +193,8 @@ Examples:
 
 3. **Format code:**
    ```bash
-   black code-nexus tests
-   ruff check --fix code-nexus tests
+   black codenexus tests
+   ruff check --fix codenexus tests
    npm run format
    ```
 

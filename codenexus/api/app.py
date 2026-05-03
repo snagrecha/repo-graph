@@ -17,6 +17,7 @@ from codenexus import __version__
 from codenexus.api.dependencies import init_dependencies
 from codenexus.api.routes import graph as graph_routes
 from codenexus.api.routes import overlays as overlay_routes
+from codenexus.api.routes import timeline as timeline_routes
 from codenexus.api.websocket import router as ws_router
 from codenexus.graph.store import GraphStore
 from codenexus.mcp.server import create_mcp_server
@@ -88,6 +89,7 @@ def create_app(store: GraphStore, repo_root: str) -> FastAPI:
     # REST routes
     app.include_router(graph_routes.router)
     app.include_router(overlay_routes.router)
+    app.include_router(timeline_routes.router)
     app.include_router(ws_router)
 
     # Serve built React UI if available; otherwise return a placeholder

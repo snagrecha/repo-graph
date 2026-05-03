@@ -25,7 +25,7 @@ async def get_complexity_overlay(
 async def get_churn_overlay(
     store: GraphStore = Depends(get_store),
 ) -> dict[str, int]:
-    return await asyncio.to_thread(_collect_overlay, store, "churn_score", 0)
+    return await asyncio.to_thread(_collect_overlay, store, "git_churn", 0)
 
 
 @router.get("/ownership")

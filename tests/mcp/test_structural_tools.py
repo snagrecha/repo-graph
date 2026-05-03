@@ -1,4 +1,4 @@
-from codenexus.graph.schema import Node, NodeType, make_node_id
+from codenexus.graph.schema import Edge, EdgeType, Node, NodeType, make_node_id
 from codenexus.mcp.tools import structural
 
 
@@ -185,3 +185,45 @@ def test_search_field_usages_language_filter(tmp_store):
     results = structural.search_field_usages(tmp_store, "certifications", language="typescript")
     assert len(results) == 1
     assert results[0]["language"] == "typescript"
+
+
+def test_get_blast_radius_report_computes_risk(tmp_store):
+    # Build a small graph: target -> child, parent -> target
+    target = Node(
+        id="t1",
+        type=NodeType.FUNCTION,
+        name="target",
+        file_path="a.py",
+        metadata={"git_churn": 5},
+    )
+    child = Node(
+        id="c1",
+        type=NodeType.FUNCTION,
+        name="child",
+        file_path="b.py",
+        metadata={"git_churn": 0},
+    )
+    parent = Node(
+        id="p1",
+        type=NodeType.FUNCTION,
+        name="parent",
+        file_path="c.py",
+        metadata={"git_churn": 10},
+    )
+
+    for n in [target, child, parent]:
+        tmp_store.add_node(n)
+
+    tmp_store.add_edge(Edge(source_id="t1", target_id="c1", type=EdgeType.CALLS))
+    tmp_store.add_edge(Edge(source_id="p1", target_id="t1", type=EdgeType.CALLS))
+
+    report = structural.get_blast_radius_report(tmp_store, "t1")
+    assert report["target_node_id"] == "t1"
+    assert report["affected_node_count"] == 2
+
+    ids = {n["node_id"] for n in report["affected_nodes"]}
+    assert ids == {"c1", "p1"}
+
+    # Higher churn should yield higher risk
+    scores = {n["node_id"]: n["risk_score"] for n in report["affected_nodes"]}
+    assert scores["p1"] > scores["c1"]

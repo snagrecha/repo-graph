@@ -6,21 +6,26 @@ from pathlib import Path
 from pydriller import Repository
 
 from codenexus.graph.store import GraphStore
+from codenexus.ingestion.diff_snapshot import generate_diff_snapshots
 
 logger = logging.getLogger(__name__)
 
 
-def apply_git_overlay(repo_root: str, store: GraphStore, granularity: str = "file") -> None:
+def apply_git_overlay(
+    repo_root: str, store: GraphStore, granularity: str = "file", skip_snapshots: bool = False
+) -> None:
     """Applies git history metadata to nodes in the GraphStore.
 
     By default (granularity='file'), it aggregates metrics per file path and applies
     them to all nodes within that file.
+
+    Also generates per-commit diff snapshots (unless *skip_snapshots* is True).
     """
-    logger.info(f"Starting git overlay (granularity={granularity}) for {repo_root}")
+    logger.info("Starting git overlay (granularity=%s) for %s", granularity, repo_root)
     start_time = time.time()
 
     if granularity != "file":
-        logger.warning(f"Granularity {granularity} not fully implemented, falling back to 'file'")
+        logger.warning("Granularity %s not fully implemented, falling back to 'file'", granularity)
         granularity = "file"
 
     file_churn: dict[str, int] = defaultdict(int)
@@ -50,8 +55,8 @@ def apply_git_overlay(repo_root: str, store: GraphStore, granularity: str = "fil
                 # the last one we see should be the most recent.
                 file_last_modified[abs_path] = commit_time
 
-    except Exception as e:
-        logger.error(f"Failed to extract git history: {e}")
+    except Exception as exc:
+        logger.error("Failed to extract git history: %s", exc)
         return
 
     # Now apply to the graph
@@ -67,5 +72,8 @@ def apply_git_overlay(repo_root: str, store: GraphStore, granularity: str = "fil
             updates += 1
 
     logger.info(
-        f"Git overlay complete in {time.time() - start_time:.2f}s. Updated {updates} nodes."
+        "Git overlay complete in %.2fs. Updated %d nodes.", time.time() - start_time, updates
     )
+
+    if not skip_snapshots:
+        generate_diff_snapshots(repo_root, store)
