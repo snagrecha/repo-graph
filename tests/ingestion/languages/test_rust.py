@@ -165,9 +165,7 @@ def test_intra_file_call_edge():
     helper_id = make_node_id(_ROOT, _FILE, "helper")
     caller_id = make_node_id(_ROOT, _FILE, "caller")
     call_edges = [e for e in edges if e.type == EdgeType.CALLS]
-    assert any(
-        e.source_id == caller_id and e.target_id == helper_id for e in call_edges
-    )
+    assert any(e.source_id == caller_id and e.target_id == helper_id for e in call_edges)
 
 
 def test_no_self_call_edge():
@@ -203,9 +201,7 @@ def test_crate_relative_import_edge(tmp_path):
     file_id = make_node_id(root, lib_rs, "")
     target_id = make_node_id(root, str(utils), "")
     import_edges = [e for e in edges if e.type == EdgeType.IMPORTS]
-    assert any(
-        e.source_id == file_id and e.target_id == target_id for e in import_edges
-    )
+    assert any(e.source_id == file_id and e.target_id == target_id for e in import_edges)
 
 
 def test_std_import_no_edge():

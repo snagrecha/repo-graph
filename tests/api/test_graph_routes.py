@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import pytest
-
 from codenexus.graph.schema import Edge, EdgeType, Node, NodeType, make_node_id
-from codenexus.graph.store import GraphStore
 
 
 async def test_get_graph_returns_nodes_and_edges(async_client):

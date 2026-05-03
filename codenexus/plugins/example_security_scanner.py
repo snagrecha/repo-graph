@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class ExampleSecurityScanner(RepoGraphPlugin):
     """An example plugin that flags functions for security scans.
-    
+
     This demonstrates how to hook into the node creation process and modify metadata,
     and how to hook into the final graph ready event to run queries.
     """
@@ -24,5 +24,6 @@ class ExampleSecurityScanner(RepoGraphPlugin):
     def on_graph_ready(self, store: GraphStore) -> None:
         # Example query: find all functions and check if they need scanning
         logger.info(
-            "ExampleSecurityScanner: Graph is ready. In a real scenario, this would run a full scan."
+            "ExampleSecurityScanner: Graph is ready. "
+            "In a real scenario, this would run a full scan."
         )

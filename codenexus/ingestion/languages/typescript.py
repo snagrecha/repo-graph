@@ -26,9 +26,7 @@ _CALL_QUERY_TSX = Query(
 _TS_EXTENSIONS = (".ts", ".tsx", ".js", ".jsx", ".mts", ".cts")
 
 
-def _resolve_relative_import(
-    file_path: str, module_spec: str, repo_root: str
-) -> str | None:
+def _resolve_relative_import(file_path: str, module_spec: str, repo_root: str) -> str | None:
     base_dir = Path(file_path).parent
     candidate = (base_dir / module_spec).resolve()
     # Try exact path first (already has extension)
@@ -71,9 +69,7 @@ def _extract_class_node(
         end_line=class_decl.end_point[0] + 1,
         language="typescript",
     )
-    inner_edges: list[Edge] = [
-        Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS)
-    ]
+    inner_edges: list[Edge] = [Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS)]
     # class_heritage has no field name; search by node type
     for sibling in class_decl.children:
         if sibling.type == "class_heritage":
@@ -81,9 +77,7 @@ def _extract_class_node(
                 if clause.type == "extends_clause":
                     for c in clause.children:
                         if c.type == "identifier":
-                            base_id = make_node_id(
-                                repo_root, file_path, c.text.decode()
-                            )
+                            base_id = make_node_id(repo_root, file_path, c.text.decode())
                             inner_edges.append(
                                 Edge(
                                     source_id=node_id,
@@ -149,14 +143,10 @@ class TypeScriptParser(BaseLanguageParser):
                         language="typescript",
                     )
                 )
-                edges.append(
-                    Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS)
-                )
+                edges.append(Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS))
 
             elif inner.type == "class_declaration":
-                node, class_edges = _extract_class_node(
-                    inner, file_path, repo_root, file_id
-                )
+                node, class_edges = _extract_class_node(inner, file_path, repo_root, file_id)
                 nodes.append(node)
                 edges.extend(class_edges)
 
@@ -171,9 +161,7 @@ class TypeScriptParser(BaseLanguageParser):
                     if name.startswith("_"):
                         continue
                     value_node = declarator.child_by_field_name("value")
-                    is_arrow = (
-                        value_node is not None and value_node.type == "arrow_function"
-                    )
+                    is_arrow = value_node is not None and value_node.type == "arrow_function"
                     if is_arrow:
                         node_id = make_node_id(repo_root, file_path, name)
                         func_ids[name] = node_id

@@ -111,9 +111,7 @@ def test_downstream_multiple_edge_types_in_filter(tmp_store):
     tmp_store.add_edge(_edge(a, b, EdgeType.CALLS))
     tmp_store.add_edge(_edge(a, c, EdgeType.IMPORTS))
 
-    deps = get_downstream_deps(
-        tmp_store, a.id, edge_types={EdgeType.CALLS, EdgeType.IMPORTS}
-    )
+    deps = get_downstream_deps(tmp_store, a.id, edge_types={EdgeType.CALLS, EdgeType.IMPORTS})
     assert {n.name for n in deps} == {"b", "c"}
 
 

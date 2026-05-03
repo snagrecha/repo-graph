@@ -1,4 +1,5 @@
 import click
+
 from codenexus import __version__
 
 
@@ -18,6 +19,7 @@ def start(path, port, workers, full_reindex):
     """Ingest repository and start the FastAPI server (UI + MCP)."""
     import logging
     from pathlib import Path
+
     from codenexus.ingestion.engine import IngestionEngine
 
     logging.basicConfig(
@@ -25,12 +27,13 @@ def start(path, port, workers, full_reindex):
     )
 
     click.echo(f"Starting codenexus for: {path}")
-    
+
     db_path = Path(path) / ".code-nexus" / "graph.db"
     engine = IngestionEngine(repo_root=path, db_path=db_path)
     engine.run(workers=workers, full_reindex=full_reindex)
 
     import uvicorn
+
     from codenexus.api.app import create_app
     from codenexus.graph.store import GraphStore
 
@@ -52,8 +55,9 @@ def mcp(path, workers):
     import asyncio
     import logging
     from pathlib import Path
-    from codenexus.ingestion.engine import IngestionEngine
+
     from codenexus.graph.store import GraphStore
+    from codenexus.ingestion.engine import IngestionEngine
     from codenexus.mcp.server import run_stdio_server
 
     logging.basicConfig(
@@ -61,7 +65,7 @@ def mcp(path, workers):
     )
 
     db_path = Path(path) / ".code-nexus" / "graph.db"
-    
+
     # 1. Ensure graph is ingested
     engine = IngestionEngine(repo_root=path, db_path=db_path)
     engine.run(workers=workers)
@@ -82,6 +86,7 @@ def sync(path):
     """Re-run git overlay on an existing graph."""
     import logging
     from pathlib import Path
+
     from codenexus.graph.store import GraphStore
     from codenexus.ingestion.git_overlay import apply_git_overlay
 
@@ -94,7 +99,7 @@ def sync(path):
 
     with GraphStore(db_path) as store:
         apply_git_overlay(path, store)
-        
+
     click.echo("Sync complete.")
 
 

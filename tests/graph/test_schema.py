@@ -40,9 +40,7 @@ def test_make_node_id_is_hex_string():
 
 
 def test_make_node_id_differs_by_file_path():
-    assert make_node_id("/repo", "a.py", "func") != make_node_id(
-        "/repo", "b.py", "func"
-    )
+    assert make_node_id("/repo", "a.py", "func") != make_node_id("/repo", "b.py", "func")
 
 
 def test_make_node_id_differs_by_symbol():
@@ -50,9 +48,7 @@ def test_make_node_id_differs_by_symbol():
 
 
 def test_make_node_id_differs_by_repo_root():
-    assert make_node_id("/repo1", "a.py", "foo") != make_node_id(
-        "/repo2", "a.py", "foo"
-    )
+    assert make_node_id("/repo1", "a.py", "foo") != make_node_id("/repo2", "a.py", "foo")
 
 
 def test_make_node_id_no_collision_on_concat():

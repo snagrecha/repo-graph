@@ -1,13 +1,13 @@
-import asyncio
 from typing import Any
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent, ImageContent, EmbeddedResource
+from mcp.types import TextContent, Tool
 
 from codenexus.graph.session import SessionManager
 from codenexus.graph.store import GraphStore
-from codenexus.mcp.tools import structural, session as session_tools
+from codenexus.mcp.tools import session as session_tools
+from codenexus.mcp.tools import structural
 
 
 def create_mcp_server(store: GraphStore, repo_root: str) -> Server:
@@ -153,6 +153,7 @@ def create_mcp_server(store: GraphStore, repo_root: str) -> Server:
                 raise ValueError(f"Unknown tool: {name}")
 
             import json
+
             return [TextContent(type="text", text=json.dumps(result, indent=2))]
 
         except Exception as e:

@@ -1,10 +1,8 @@
 import logging
 import multiprocessing
 import os
-import sqlite3
 import time
 from pathlib import Path
-from typing import Any
 
 from codenexus.graph.schema import Edge, Node
 from codenexus.graph.store import GraphStore
@@ -20,7 +18,7 @@ MAX_FILE_BYTES = 500 * 1024  # 500 KB
 
 
 def _parse_worker(
-    args: tuple[str, str]
+    args: tuple[str, str],
 ) -> tuple[str, tuple[list[Node], list[Edge]] | None]:
     """Top-level worker function for multiprocessing.
 
@@ -51,25 +49,19 @@ class IngestionEngine:
         self.plugins = PluginManager(self.repo_root / ".codenexus" / "plugins")
 
     def _setup_index_table(self, store: GraphStore) -> None:
-        store._db.execute(
-            """
+        store._db.execute("""
             CREATE TABLE IF NOT EXISTS file_index (
                 file_path TEXT PRIMARY KEY,
                 last_modified REAL
             );
-            """
-        )
+            """)
         store._db.commit()
 
     def _get_indexed_mtimes(self, store: GraphStore) -> dict[str, float]:
-        rows = store._db.execute(
-            "SELECT file_path, last_modified FROM file_index"
-        ).fetchall()
+        rows = store._db.execute("SELECT file_path, last_modified FROM file_index").fetchall()
         return {row["file_path"]: row["last_modified"] for row in rows}
 
-    def _update_indexed_mtime(
-        self, store: GraphStore, file_path: str, mtime: float
-    ) -> None:
+    def _update_indexed_mtime(self, store: GraphStore, file_path: str, mtime: float) -> None:
         store._db.execute(
             "INSERT OR REPLACE INTO file_index (file_path, last_modified) VALUES (?, ?)",
             (file_path, mtime),
@@ -80,9 +72,7 @@ class IngestionEngine:
         found = []
         for root, dirs, files in os.walk(self.repo_root):
             # Skip ignored directories and hidden directories
-            dirs[:] = [
-                d for d in dirs if d not in IGNORE_DIRS and not d.startswith(".")
-            ]
+            dirs[:] = [d for d in dirs if d not in IGNORE_DIRS and not d.startswith(".")]
 
             for file in files:
                 if file.startswith("."):
@@ -99,7 +89,10 @@ class IngestionEngine:
         return found
 
     def run(
-        self, workers: int = 4, full_reindex: bool = False, git_granularity: str = "file"
+        self,
+        workers: int = 4,
+        full_reindex: bool = False,
+        git_granularity: str = "file",
     ) -> None:
         """Run the full ingestion pipeline."""
         logger.info(f"Starting ingestion for {self.repo_root}")
@@ -136,9 +129,7 @@ class IngestionEngine:
                 for f_path in deleted_files:
                     logger.debug(f"Removing deleted file from graph: {f_path}")
                     store.delete_nodes_by_file(f_path)
-                    store._db.execute(
-                        "DELETE FROM file_index WHERE file_path = ?", (f_path,)
-                    )
+                    store._db.execute("DELETE FROM file_index WHERE file_path = ?", (f_path,))
 
                 if deleted_files:
                     store._db.commit()
@@ -156,9 +147,7 @@ class IngestionEngine:
 
                 # We use imap_unordered to process files as soon as they finish parsing
                 with multiprocessing.Pool(processes=workers) as pool:
-                    for file_path, result in pool.imap_unordered(
-                        _parse_worker, worker_args
-                    ):
+                    for file_path, result in pool.imap_unordered(_parse_worker, worker_args):
                         if result is not None:
                             # Clear old nodes for this file before inserting new ones
                             if not full_reindex and file_path in indexed_mtimes:
@@ -168,15 +157,13 @@ class IngestionEngine:
                             for node in nodes:
                                 node = self.plugins.trigger_on_node_created(node)
                                 store.add_node(node)
-                            
+
                             all_edges.extend(edges)
 
                         # Update the mtime index even if result is None (unsupported extension)
                         # to prevent retrying every time.
                         if file_path in current_mtimes:
-                            self._update_indexed_mtime(
-                                store, file_path, current_mtimes[file_path]
-                            )
+                            self._update_indexed_mtime(store, file_path, current_mtimes[file_path])
 
                 # Now add all edges since all parsed nodes have been added
                 for edge in all_edges:
@@ -190,9 +177,7 @@ class IngestionEngine:
 
             # Apply Git history if requested
             if full_reindex:
-                apply_git_overlay(
-                    str(self.repo_root), store, granularity=git_granularity
-                )
+                apply_git_overlay(str(self.repo_root), store, granularity=git_granularity)
 
             self.plugins.trigger_on_graph_ready(store)
 

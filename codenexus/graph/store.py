@@ -147,9 +147,7 @@ class GraphStore:
 
     def delete_nodes_by_file(self, file_path: str) -> None:
         """Remove all nodes (and their incident edges) that belong to a file."""
-        rows = self._db.execute(
-            "SELECT id FROM nodes WHERE file_path = ?", (file_path,)
-        ).fetchall()
+        rows = self._db.execute("SELECT id FROM nodes WHERE file_path = ?", (file_path,)).fetchall()
         node_ids = [row["id"] for row in rows]
         if not node_ids:
             return
@@ -159,9 +157,7 @@ class GraphStore:
         # Evict edge-tracking entries whose endpoints are being deleted *before*
         # we call remove_node (which frees those edge indices in rustworkx).
         stale_keys = [
-            k
-            for k in self._edge_key_to_idx
-            if k[0] in node_id_set or k[1] in node_id_set
+            k for k in self._edge_key_to_idx if k[0] in node_id_set or k[1] in node_id_set
         ]
         for k in stale_keys:
             del self._edge_key_to_idx[k]

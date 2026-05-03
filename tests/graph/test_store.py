@@ -4,9 +4,7 @@ from codenexus.graph.schema import Edge, EdgeType, Node, NodeType, make_node_id
 from codenexus.graph.store import GraphStore
 
 
-def _node(
-    name: str, file_path: str = "foo.py", node_type: NodeType = NodeType.FUNCTION
-) -> Node:
+def _node(name: str, file_path: str = "foo.py", node_type: NodeType = NodeType.FUNCTION) -> Node:
     return Node(
         id=make_node_id("/repo", file_path, name),
         type=node_type,
@@ -55,9 +53,7 @@ def test_node_count_increments(tmp_store):
 def test_add_node_upserts_by_id(tmp_store):
     node = _node("fn")
     tmp_store.add_node(node)
-    updated = Node(
-        id=node.id, type=NodeType.FUNCTION, name="fn", file_path="foo.py", start_line=99
-    )
+    updated = Node(id=node.id, type=NodeType.FUNCTION, name="fn", file_path="foo.py", start_line=99)
     tmp_store.add_node(updated)
     assert tmp_store.node_count() == 1
     assert tmp_store.get_node(node.id).start_line == 99

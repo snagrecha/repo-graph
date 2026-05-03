@@ -7,9 +7,7 @@ async def test_mcp_sse_endpoint_returns_event_stream(test_app):
     # The SSE stream never terminates; cancel after verifying headers.
     from httpx import ASGITransport, AsyncClient
 
-    async with AsyncClient(
-        transport=ASGITransport(app=test_app), base_url="http://test"
-    ) as client:
+    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as client:
         try:
             async with asyncio.timeout(1):
                 async with client.stream("GET", "/mcp/sse") as response:

@@ -17,9 +17,7 @@ _CALL_QUERY = Query(
 )
 
 
-def _resolve_relative_import(
-    file_path: str, dots: int, module: str, repo_root: str
-) -> str | None:
+def _resolve_relative_import(file_path: str, dots: int, module: str, repo_root: str) -> str | None:
     base_dir = Path(file_path).parent
     for _ in range(dots - 1):
         base_dir = base_dir.parent
@@ -101,9 +99,7 @@ class PythonParser(BaseLanguageParser):
                         language="python",
                     )
                 )
-                edges.append(
-                    Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS)
-                )
+                edges.append(Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS))
 
             elif inner.type == "class_definition":
                 name_node = inner.child_by_field_name("name")
@@ -122,9 +118,7 @@ class PythonParser(BaseLanguageParser):
                         language="python",
                     )
                 )
-                edges.append(
-                    Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS)
-                )
+                edges.append(Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS))
 
                 # inherits edges (resolved within the same file only)
                 supers = inner.child_by_field_name("superclasses")
@@ -168,9 +162,7 @@ class PythonParser(BaseLanguageParser):
                         language="python",
                     )
                 )
-                edges.append(
-                    Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS)
-                )
+                edges.append(Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS))
 
         # Second pass — imports and intra-file calls.
         for child in root.children:
@@ -199,9 +191,7 @@ class PythonParser(BaseLanguageParser):
                             )
                         )
 
-            elif child.type in ("function_definition",) or (
-                child.type == "decorated_definition"
-            ):
+            elif child.type in ("function_definition",) or (child.type == "decorated_definition"):
                 inner = _unwrap_decorated(child) or child
                 if inner.type != "function_definition":
                     continue

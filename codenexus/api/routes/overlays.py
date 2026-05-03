@@ -11,9 +11,7 @@ router = APIRouter(prefix="/api/overlays", tags=["overlays"])
 
 
 def _collect_overlay(store: GraphStore, key: str, default) -> dict:
-    return {
-        node.id: node.metadata.get(key, default) for node in store.get_all_nodes()
-    }
+    return {node.id: node.metadata.get(key, default) for node in store.get_all_nodes()}
 
 
 @router.get("/complexity")

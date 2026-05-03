@@ -16,9 +16,7 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket) -> None:
-        self.active_connections = [
-            ws for ws in self.active_connections if ws is not websocket
-        ]
+        self.active_connections = [ws for ws in self.active_connections if ws is not websocket]
 
     async def broadcast(self, message: dict) -> None:
         dead: list[WebSocket] = []

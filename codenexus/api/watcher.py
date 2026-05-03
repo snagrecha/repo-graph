@@ -15,9 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class GraphWatcher(FileSystemEventHandler):
-    def __init__(
-        self, store: GraphStore, repo_root: str, loop: asyncio.AbstractEventLoop
-    ) -> None:
+    def __init__(self, store: GraphStore, repo_root: str, loop: asyncio.AbstractEventLoop) -> None:
         super().__init__()
         self._store = store
         self._repo_root = repo_root
@@ -69,9 +67,7 @@ class GraphWatcher(FileSystemEventHandler):
             self._handle_delete(str(event.src_path))
 
 
-def start_watcher(
-    store: GraphStore, repo_root: str, loop: asyncio.AbstractEventLoop
-) -> Observer:
+def start_watcher(store: GraphStore, repo_root: str, loop: asyncio.AbstractEventLoop) -> Observer:
     handler = GraphWatcher(store, repo_root, loop)
     observer = Observer()
     observer.schedule(handler, path=repo_root, recursive=True)

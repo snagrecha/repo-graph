@@ -82,9 +82,7 @@ def create_app(store: GraphStore, repo_root: str) -> FastAPI:
         # handle_post_message writes the full ASGI response (headers + body)
         # directly via send, so we return an inert Response to prevent FastAPI
         # from sending a second response on top of it.
-        await sse_transport.handle_post_message(
-            request.scope, request.receive, request._send
-        )
+        await sse_transport.handle_post_message(request.scope, request.receive, request._send)
         return _SentResponse()
 
     # REST routes
@@ -105,9 +103,7 @@ def create_app(store: GraphStore, repo_root: str) -> FastAPI:
 
         @app.get("/", include_in_schema=False)
         async def ui_placeholder():
-            return JSONResponse(
-                {"status": "ui_not_built", "hint": "cd ui && npm run build"}
-            )
+            return JSONResponse({"status": "ui_not_built", "hint": "cd ui && npm run build"})
 
     # Phase 2: include routes/timeline.py once diff_snapshot.py is complete
 

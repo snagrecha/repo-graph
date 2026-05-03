@@ -4,7 +4,7 @@ import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from codenexus.api.dependencies import get_repo_root, get_store
+from codenexus.api.dependencies import get_store
 from codenexus.api.serializers import (
     BlastRadiusResponse,
     GraphResponse,

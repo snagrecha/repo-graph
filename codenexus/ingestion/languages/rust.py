@@ -43,9 +43,7 @@ def _use_path_segments(node) -> list[str]:
     return []
 
 
-def _resolve_use_path(
-    segments: list[str], file_path: str, repo_root: str
-) -> str | None:
+def _resolve_use_path(segments: list[str], file_path: str, repo_root: str) -> str | None:
     if not segments:
         return None
 
@@ -143,9 +141,7 @@ class RustParser(BaseLanguageParser):
                         metadata={"pub": _is_pub(child)},
                     )
                 )
-                edges.append(
-                    Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS)
-                )
+                edges.append(Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS))
 
             elif child.type in ("struct_item", "enum_item"):
                 name = _name_field(child)
@@ -164,9 +160,7 @@ class RustParser(BaseLanguageParser):
                         metadata={"kind": child.type[:-5], "pub": _is_pub(child)},
                     )
                 )
-                edges.append(
-                    Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS)
-                )
+                edges.append(Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS))
 
             elif child.type == "const_item":
                 name = _name_field(child)
@@ -185,9 +179,7 @@ class RustParser(BaseLanguageParser):
                         metadata={"pub": _is_pub(child)},
                     )
                 )
-                edges.append(
-                    Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS)
-                )
+                edges.append(Edge(source_id=file_id, target_id=node_id, type=EdgeType.CONTAINS))
 
             elif child.type == "impl_item":
                 # Methods in impl blocks: register as functions of the file
@@ -201,9 +193,7 @@ class RustParser(BaseLanguageParser):
                         method_name = _name_field(item)
                         if method_name is None:
                             continue
-                        qualified = (
-                            f"{type_name}::{method_name}" if type_name else method_name
-                        )
+                        qualified = f"{type_name}::{method_name}" if type_name else method_name
                         node_id = make_node_id(repo_root, file_path, qualified)
                         func_ids[method_name] = node_id
                         func_ids[qualified] = node_id

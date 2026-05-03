@@ -1,7 +1,12 @@
 from pathlib import Path
 from typing import Any
 
-from codenexus.graph.queries import get_downstream_deps, get_upstream_callers
+from codenexus.graph.queries import (
+    get_downstream_deps,
+)
+from codenexus.graph.queries import (
+    get_upstream_callers as _query_upstream_callers,
+)
 from codenexus.graph.schema import NodeType
 from codenexus.graph.store import GraphStore
 
@@ -70,11 +75,9 @@ def get_downstream_dependencies(
     return [_node_to_dict(n) for n in nodes]
 
 
-def get_upstream_callers(
-    store: GraphStore, node_id: str, depth: int = 3
-) -> list[dict[str, Any]]:
+def get_upstream_callers(store: GraphStore, node_id: str, depth: int = 3) -> list[dict[str, Any]]:
     """Return nodes that call or import the given node."""
-    nodes = get_upstream_callers(store, node_id, max_depth=depth)
+    nodes = _query_upstream_callers(store, node_id, max_depth=depth)
     return [_node_to_dict(n) for n in nodes]
 
 

@@ -10,9 +10,7 @@ from codenexus.graph.store import GraphStore
 logger = logging.getLogger(__name__)
 
 
-def apply_git_overlay(
-    repo_root: str, store: GraphStore, granularity: str = "file"
-) -> None:
+def apply_git_overlay(repo_root: str, store: GraphStore, granularity: str = "file") -> None:
     """Applies git history metadata to nodes in the GraphStore.
 
     By default (granularity='file'), it aggregates metrics per file path and applies
@@ -22,9 +20,7 @@ def apply_git_overlay(
     start_time = time.time()
 
     if granularity != "file":
-        logger.warning(
-            f"Granularity {granularity} not fully implemented, falling back to 'file'"
-        )
+        logger.warning(f"Granularity {granularity} not fully implemented, falling back to 'file'")
         granularity = "file"
 
     file_churn: dict[str, int] = defaultdict(int)

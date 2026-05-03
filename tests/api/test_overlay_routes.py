@@ -13,9 +13,11 @@ async def test_complexity_overlay_returns_scores(async_client, test_store):
 async def test_complexity_overlay_null_when_missing(async_client, test_store):
     # my_func has complexity but no churn; churn defaults to 0 not null
     # verify that a node with no complexity key gets None
-    node_without = next(
-        n for n in test_store.get_all_nodes() if "cyclomatic_complexity" not in n.metadata
-    ) if any("cyclomatic_complexity" not in n.metadata for n in test_store.get_all_nodes()) else None
+    node_without = (
+        next(n for n in test_store.get_all_nodes() if "cyclomatic_complexity" not in n.metadata)
+        if any("cyclomatic_complexity" not in n.metadata for n in test_store.get_all_nodes())
+        else None
+    )
 
     response = await async_client.get("/api/overlays/complexity")
     body = response.json()

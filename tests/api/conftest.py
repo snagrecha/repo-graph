@@ -21,7 +21,11 @@ def test_store(tmp_path):
         name="foo.py",
         file_path="src/foo.py",
         language="python",
-        metadata={"cyclomatic_complexity": 5, "churn_score": 3, "primary_owner": "alice"},
+        metadata={
+            "cyclomatic_complexity": 5,
+            "churn_score": 3,
+            "primary_owner": "alice",
+        },
     )
     fn_node = Node(
         id=make_node_id(str(tmp_path), "src/foo.py", "my_func"),
@@ -57,7 +61,5 @@ def test_app(test_store, tmp_path):
 
 @pytest_asyncio.fixture()
 async def async_client(test_app):
-    async with AsyncClient(
-        transport=ASGITransport(app=test_app), base_url="http://test"
-    ) as client:
+    async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as client:
         yield client

@@ -2,10 +2,10 @@ import importlib.util
 import inspect
 import logging
 from pathlib import Path
-from typing import Any
 
 from codenexus.graph.schema import Node
 from codenexus.graph.store import GraphStore
+
 from .base import RepoGraphPlugin
 
 logger = logging.getLogger(__name__)
@@ -50,9 +50,7 @@ class PluginManager:
             try:
                 node = plugin.on_node_created(node)
             except Exception as e:
-                logger.error(
-                    f"Plugin {plugin.__class__.__name__} failed in on_node_created: {e}"
-                )
+                logger.error(f"Plugin {plugin.__class__.__name__} failed in on_node_created: {e}")
         return node
 
     def trigger_on_graph_ready(self, store: GraphStore) -> None:
@@ -61,6 +59,4 @@ class PluginManager:
             try:
                 plugin.on_graph_ready(store)
             except Exception as e:
-                logger.error(
-                    f"Plugin {plugin.__class__.__name__} failed in on_graph_ready: {e}"
-                )
+                logger.error(f"Plugin {plugin.__class__.__name__} failed in on_graph_ready: {e}")
