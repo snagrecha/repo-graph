@@ -14,7 +14,15 @@ def main():
 @click.argument("path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option("--port", default=7842, help="Port for the FastAPI server")
 @click.option("--workers", default=4, help="Number of parallel parsing workers")
-@click.option("--full-reindex", is_flag=True, help="Force full re-index (includes git overlay)")
+@click.option(
+    "--full-reindex",
+    is_flag=True,
+    help=(
+        "Force full re-index (includes git overlay). "
+        "Required after upgrading codenexus to pick up new node types, "
+        "field tracking, or edge extraction."
+    ),
+)
 def start(path, port, workers, full_reindex):
     """Ingest repository and start the FastAPI server (UI + MCP)."""
     import logging
@@ -50,7 +58,15 @@ def start(path, port, workers, full_reindex):
 @main.command()
 @click.argument("path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
 @click.option("--workers", default=4, help="Number of parallel parsing workers")
-def mcp(path, workers):
+@click.option(
+    "--full-reindex",
+    is_flag=True,
+    help=(
+        "Force full re-index. Required after upgrading codenexus to pick up "
+        "new node types, field tracking, or edge extraction."
+    ),
+)
+def mcp(path, workers, full_reindex):
     """Ingest repository and start the MCP server via stdio transport."""
     import asyncio
     import logging
@@ -68,7 +84,7 @@ def mcp(path, workers):
 
     # 1. Ensure graph is ingested
     engine = IngestionEngine(repo_root=path, db_path=db_path)
-    engine.run(workers=workers)
+    engine.run(workers=workers, full_reindex=full_reindex)
 
     # 2. Start MCP server
     # We use a context manager to ensure DB is closed on exit if needed,

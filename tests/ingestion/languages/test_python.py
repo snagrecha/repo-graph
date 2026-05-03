@@ -255,3 +255,41 @@ def test_nested_function_not_extracted():
     func_nodes = [n for n in nodes if n.type == NodeType.FUNCTION]
     assert len(func_nodes) == 1
     assert func_nodes[0].name == "outer"
+
+
+# ---------------------------------------------------------------------------
+# Attribute access / accessed_fields metadata
+# ---------------------------------------------------------------------------
+
+
+def test_attribute_accesses_stored_in_metadata():
+    nodes, _ = _parse("""\
+        def render(candidate):
+            return candidate.name + str(candidate.certifications)
+        """)
+    fn = next(n for n in nodes if n.type == NodeType.FUNCTION and n.name == "render")
+    assert "accessed_fields" in fn.metadata
+    assert "name" in fn.metadata["accessed_fields"]
+    assert "certifications" in fn.metadata["accessed_fields"]
+
+
+def test_attribute_access_line_numbers_recorded():
+    nodes, _ = _parse("""\
+        def show(obj):
+            x = obj.status
+            return x
+        """)
+    fn = next(n for n in nodes if n.type == NodeType.FUNCTION and n.name == "show")
+    assert fn.metadata["accessed_fields"]["status"] == [2]
+
+
+def test_attribute_accesses_deduplicated_per_line():
+    nodes, _ = _parse("def f(a): return a.x + a.x\n")
+    fn = next(n for n in nodes if n.type == NodeType.FUNCTION and n.name == "f")
+    assert fn.metadata["accessed_fields"]["x"] == [1]
+
+
+def test_function_with_no_attribute_accesses_has_no_accessed_fields():
+    nodes, _ = _parse("def add(a, b): return a + b\n")
+    fn = next(n for n in nodes if n.type == NodeType.FUNCTION and n.name == "add")
+    assert "accessed_fields" not in fn.metadata

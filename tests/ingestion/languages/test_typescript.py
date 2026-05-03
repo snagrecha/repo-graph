@@ -244,3 +244,200 @@ def test_empty_file():
     file_nodes = [n for n in nodes if n.type == NodeType.FILE]
     assert len(file_nodes) == 1
     assert edges == []
+
+
+# ---------------------------------------------------------------------------
+# Interface extraction
+# ---------------------------------------------------------------------------
+
+
+def test_interface_extracted():
+    nodes, _ = _parse("interface CandidateItem { id: number; name: string; }\n")
+    iface_nodes = [n for n in nodes if n.type == NodeType.INTERFACE]
+    assert len(iface_nodes) == 1
+    assert iface_nodes[0].name == "CandidateItem"
+    assert iface_nodes[0].id == make_node_id(_ROOT, _FILE, "CandidateItem")
+
+
+def test_exported_interface_extracted():
+    nodes, _ = _parse("export interface ArticleOut { title: string; }\n")
+    iface_nodes = [n for n in nodes if n.type == NodeType.INTERFACE]
+    assert len(iface_nodes) == 1
+    assert iface_nodes[0].name == "ArticleOut"
+
+
+def test_interface_contains_edge():
+    nodes, edges = _parse("interface Foo { x: number; }\n")
+    file_id = make_node_id(_ROOT, _FILE, "")
+    iface_id = make_node_id(_ROOT, _FILE, "Foo")
+    contains = [e for e in edges if e.type == EdgeType.CONTAINS]
+    assert any(e.source_id == file_id and e.target_id == iface_id for e in contains)
+
+
+# ---------------------------------------------------------------------------
+# Type alias extraction
+# ---------------------------------------------------------------------------
+
+
+def test_type_alias_extracted():
+    nodes, _ = _parse("type CandidateGrid = CandidateItem[];\n")
+    type_nodes = [n for n in nodes if n.type == NodeType.TYPE_ALIAS]
+    assert len(type_nodes) == 1
+    assert type_nodes[0].name == "CandidateGrid"
+
+
+def test_exported_type_alias_extracted():
+    nodes, _ = _parse("export type Status = 'active' | 'inactive';\n")
+    type_nodes = [n for n in nodes if n.type == NodeType.TYPE_ALIAS]
+    assert len(type_nodes) == 1
+    assert type_nodes[0].name == "Status"
+
+
+def test_type_alias_contains_edge():
+    nodes, edges = _parse("type MyType = string | number;\n")
+    file_id = make_node_id(_ROOT, _FILE, "")
+    type_id = make_node_id(_ROOT, _FILE, "MyType")
+    contains = [e for e in edges if e.type == EdgeType.CONTAINS]
+    assert any(e.source_id == file_id and e.target_id == type_id for e in contains)
+
+
+# ---------------------------------------------------------------------------
+# Enum extraction
+# ---------------------------------------------------------------------------
+
+
+def test_enum_extracted_as_symbol():
+    nodes, _ = _parse("enum Direction { Up, Down, Left, Right }\n")
+    syms = [n for n in nodes if n.type == NodeType.SYMBOL and n.name == "Direction"]
+    assert len(syms) == 1
+
+
+def test_exported_enum_extracted():
+    nodes, _ = _parse("export enum Status { Active = 'active', Inactive = 'inactive' }\n")
+    syms = [n for n in nodes if n.type == NodeType.SYMBOL and n.name == "Status"]
+    assert len(syms) == 1
+
+
+# ---------------------------------------------------------------------------
+# PascalCase export const (React components, styled-components, etc.)
+# ---------------------------------------------------------------------------
+
+
+def test_pascalcase_export_const_extracted_as_symbol():
+    nodes, _ = _parse("export const CandidateGrid = styled.div`display: grid;`;\n")
+    syms = [n for n in nodes if n.type == NodeType.SYMBOL and n.name == "CandidateGrid"]
+    assert len(syms) == 1
+
+
+def test_pascalcase_non_export_const_extracted():
+    nodes, _ = _parse("const MyContext = createContext(null);\n")
+    syms = [n for n in nodes if n.type == NodeType.SYMBOL and n.name == "MyContext"]
+    assert len(syms) == 1
+
+
+def test_camelcase_const_not_extracted_as_symbol():
+    nodes, _ = _parse("const myVar = getValue();\n")
+    syms = [n for n in nodes if n.type == NodeType.SYMBOL and n.name == "myVar"]
+    assert syms == []
+
+
+def test_pascalcase_arrow_function_extracted_as_function_not_symbol():
+    nodes, _ = _parse("export const MyComponent = () => null;\n")
+    funcs = [n for n in nodes if n.type == NodeType.FUNCTION and n.name == "MyComponent"]
+    syms = [n for n in nodes if n.type == NodeType.SYMBOL and n.name == "MyComponent"]
+    assert len(funcs) == 1
+    assert syms == []
+
+
+# ---------------------------------------------------------------------------
+# Member access / accessed_fields metadata
+# ---------------------------------------------------------------------------
+
+
+def test_member_accesses_stored_in_metadata():
+    nodes, _ = _parse("function render(item) { return item.name + item.certifications.length; }\n")
+    fn = next(n for n in nodes if n.type == NodeType.FUNCTION and n.name == "render")
+    assert "accessed_fields" in fn.metadata
+    assert "name" in fn.metadata["accessed_fields"]
+    assert "certifications" in fn.metadata["accessed_fields"]
+
+
+def test_member_access_line_numbers_recorded():
+    src = "function show(x) {\n  return x.status;\n}\n"
+    nodes, _ = _parse(src)
+    fn = next(n for n in nodes if n.type == NodeType.FUNCTION and n.name == "show")
+    assert fn.metadata["accessed_fields"]["status"] == [2]
+
+
+def test_member_accesses_deduplicated_per_line():
+    src = "function f(a) { return a.x + a.x + a.x; }\n"
+    nodes, _ = _parse(src)
+    fn = next(n for n in nodes if n.type == NodeType.FUNCTION and n.name == "f")
+    assert fn.metadata["accessed_fields"]["x"] == [1]
+
+
+def test_function_with_no_member_accesses_has_no_accessed_fields():
+    nodes, _ = _parse("function pure(a, b) { return a + b; }\n")
+    fn = next(n for n in nodes if n.type == NodeType.FUNCTION and n.name == "pure")
+    assert "accessed_fields" not in fn.metadata
+
+
+def test_arrow_function_member_accesses():
+    nodes, _ = _parse("const getLabel = (item) => item.label;\n")
+    fn = next(n for n in nodes if n.type == NodeType.FUNCTION and n.name == "getLabel")
+    assert "label" in fn.metadata.get("accessed_fields", {})
+
+
+# ---------------------------------------------------------------------------
+# JSX CALLS edges (TSX parser only)
+# ---------------------------------------------------------------------------
+
+_TSX_PARSER_INST = Parser(Language(tsts.language_tsx()))
+_TSX_EXTRACTOR = TypeScriptParser(tsx=True)
+_TSX_FILE = "/repo/src/mod.tsx"
+
+
+def _parse_tsx(src: str):
+    tree = _TSX_PARSER_INST.parse(textwrap.dedent(src).encode())
+    return _TSX_EXTRACTOR.extract_nodes_and_edges(tree, _TSX_FILE, _ROOT)
+
+
+def test_jsx_self_closing_element_creates_calls_edge():
+    # <Button /> should create a CALLS edge from Page to Button
+    src = "function Button() { return null; }\nfunction Page() { return <Button />; }\n"
+    _, edges = _parse_tsx(src)
+    button_id = make_node_id(_ROOT, _TSX_FILE, "Button")
+    page_id = make_node_id(_ROOT, _TSX_FILE, "Page")
+    calls = [e for e in edges if e.type == EdgeType.CALLS]
+    assert any(e.source_id == page_id and e.target_id == button_id for e in calls)
+
+
+def test_jsx_opening_element_creates_calls_edge():
+    # <Card>...</Card> should create a CALLS edge from List to Card
+    src = "function Card() { return null; }\n" "function List() { return <Card></Card>; }\n"
+    _, edges = _parse_tsx(src)
+    card_id = make_node_id(_ROOT, _TSX_FILE, "Card")
+    list_id = make_node_id(_ROOT, _TSX_FILE, "List")
+    calls = [e for e in edges if e.type == EdgeType.CALLS]
+    assert any(e.source_id == list_id and e.target_id == card_id for e in calls)
+
+
+def test_html_intrinsic_jsx_does_not_create_edge():
+    # <div />, <span> are lowercase HTML intrinsics — no edge expected
+    src = "function Page() { return <div><span>hello</span></div>; }\n"
+    _, edges = _parse_tsx(src)
+    calls = [e for e in edges if e.type == EdgeType.CALLS]
+    assert calls == []
+
+
+def test_jsx_component_not_in_file_does_not_create_edge():
+    # <ExternalComponent /> is not defined in this file — no edge expected
+    src = "function Page() { return <ExternalComponent />; }\n"
+    _, edges = _parse_tsx(src)
+    calls = [e for e in edges if e.type == EdgeType.CALLS]
+    assert calls == []
+
+
+def test_ts_parser_does_not_have_jsx_query():
+    # The plain TS parser must not process JSX elements
+    assert _EXTRACTOR._jsx_query is None

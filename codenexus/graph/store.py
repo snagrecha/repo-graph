@@ -224,6 +224,27 @@ class GraphStore:
                 results.append(node)
         return results
 
+    def search_nodes_with_field_access(
+        self, field_name: str, language: str | None = None
+    ) -> list[Node]:
+        """Return nodes whose accessed_fields metadata contains field_name as a key."""
+        sql = """
+        SELECT DISTINCT n.id
+        FROM nodes n, json_each(json_extract(n.metadata, '$.accessed_fields')) AS jf
+        WHERE jf.key = ?
+        """
+        params: list[Any] = [field_name]
+        if language is not None:
+            sql += " AND n.language = ?"
+            params.append(language)
+        rows = self._db.execute(sql, params).fetchall()
+        return [node for row in rows if (node := self.get_node(row["id"])) is not None]
+
+    def get_nodes_by_file(self, file_path: str) -> list[Node]:
+        """Return all nodes whose file_path matches exactly."""
+        rows = self._db.execute("SELECT id FROM nodes WHERE file_path = ?", (file_path,)).fetchall()
+        return [n for row in rows if (n := self.get_node(row["id"])) is not None]
+
     def node_count(self) -> int:
         return len(self._graph)
 

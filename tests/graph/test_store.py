@@ -328,6 +328,89 @@ def test_search_no_match_returns_empty(tmp_store):
 
 
 # ------------------------------------------------------------------
+# get_nodes_by_file
+# ------------------------------------------------------------------
+
+
+def test_search_nodes_with_field_access_returns_matching(tmp_store):
+    node_with = Node(
+        id=make_node_id("/repo", "a.py", "render"),
+        type=NodeType.FUNCTION,
+        name="render",
+        file_path="a.py",
+        language="python",
+        metadata={"accessed_fields": {"certifications": [10, 25], "name": [5]}},
+    )
+    node_without = _node("other", "b.py")
+    tmp_store.add_node(node_with)
+    tmp_store.add_node(node_without)
+
+    results = tmp_store.search_nodes_with_field_access("certifications")
+    assert len(results) == 1
+    assert results[0].name == "render"
+
+
+def test_search_nodes_with_field_access_language_filter(tmp_store):
+    py_node = Node(
+        id=make_node_id("/repo", "a.py", "fn"),
+        type=NodeType.FUNCTION,
+        name="fn",
+        file_path="a.py",
+        language="python",
+        metadata={"accessed_fields": {"status": [1]}},
+    )
+    ts_node = Node(
+        id=make_node_id("/repo", "b.ts", "fn"),
+        type=NodeType.FUNCTION,
+        name="fn",
+        file_path="b.ts",
+        language="typescript",
+        metadata={"accessed_fields": {"status": [3]}},
+    )
+    tmp_store.add_node(py_node)
+    tmp_store.add_node(ts_node)
+
+    results = tmp_store.search_nodes_with_field_access("status", language="python")
+    assert len(results) == 1
+    assert results[0].language == "python"
+
+
+def test_search_nodes_with_field_access_no_match_returns_empty(tmp_store):
+    node = Node(
+        id=make_node_id("/repo", "a.py", "fn"),
+        type=NodeType.FUNCTION,
+        name="fn",
+        file_path="a.py",
+        metadata={"accessed_fields": {"name": [1]}},
+    )
+    tmp_store.add_node(node)
+    assert tmp_store.search_nodes_with_field_access("nonexistent_field") == []
+
+
+def test_get_nodes_by_file_returns_matching(tmp_store):
+    a = _node("a", "foo.py")
+    b = _node("b", "foo.py")
+    c = _node("c", "bar.py")
+    for n in [a, b, c]:
+        tmp_store.add_node(n)
+    results = tmp_store.get_nodes_by_file("foo.py")
+    assert {n.name for n in results} == {"a", "b"}
+
+
+def test_get_nodes_by_file_exact_match(tmp_store):
+    tmp_store.add_node(_node("fn", "services/auth.py"))
+    tmp_store.add_node(_node("fn2", "services/auth_utils.py"))
+    results = tmp_store.get_nodes_by_file("services/auth.py")
+    assert len(results) == 1
+    assert results[0].name == "fn"
+
+
+def test_get_nodes_by_file_no_match_returns_empty(tmp_store):
+    tmp_store.add_node(_node("fn", "foo.py"))
+    assert tmp_store.get_nodes_by_file("nonexistent.py") == []
+
+
+# ------------------------------------------------------------------
 # Context manager
 # ------------------------------------------------------------------
 
